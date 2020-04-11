@@ -131,7 +131,7 @@ index_frequency = pd.Timedelta(minutes=15)
 stop_loss_buffer = 0.0010
 take_profit_buffer = 0.0010
 
-
+asdf
 
 ## Load data
 df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,inst))
