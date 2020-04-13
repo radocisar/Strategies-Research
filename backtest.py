@@ -113,92 +113,106 @@ df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,ins
 ## Adjusting start and end of time series
 # remove any dates before first Sunday (FX Specific)
 df["weekday"] = df.index.weekday
-first_sunday = df.drop_duplicates("weekday",keep="first").loc[df["weekday"] == 6,:].index[0].strftime(format="%Y-%m-%d") # FX specific
+first_sunday_str = df.drop_duplicates("weekday",keep="first").loc[df["weekday"] == 6,:].index[0].strftime(format="%Y-%m-%d") # FX specific
 df = df[first_sunday::]
 # remove any dates after last Friday
-last_friday = df.drop_duplicates("weekday",keep="last").loc[df["weekday"] == 4,:].index[0].strftime(format="%Y-%m-%d") # FX specific
+last_friday_str = df.drop_duplicates("weekday",keep="last").loc[df["weekday"] == 4,:].index[0].strftime(format="%Y-%m-%d") # FX specific
 df = df[:last_friday]
 
 
 
 ## Selecting training and testing periods
-three_weeks = datetime.timedelta(days=19) #for FX specifically
-one_week = datetime.timedelta(days=5) #for FX specifically
-n = 1 # increment by week
-# 19 days for training
-train_start_date = df.iloc[n,:].name.date()
-train_end_date = train_start_date + three_weeks #one day after actual last day as last day doesn't count
-# 6 days for testing
-unique_date_index = np.unique(df.index.date)
-train_end_index_num = int(np.where(unique_date_index == train_end_date - datetime.timedelta(days=1))[0])
-test_start_date = unique_date_index[train_end_index_num + 2] #next business day
-test_end_date = test_start_date + one_week #one day after actual last day as last day doesn't count
+three_weeks_dt = datetime.timedelta(days=19) #for FX specifically
+one_week_dt = datetime.timedelta(days=5) #for FX specifically
+last_friday_dt = df.drop_duplicates("weekday",keep="last").loc[df["weekday"] == 4,:].index[0].date()
+mondays = np.unique(df.loc[df["weekday"]==0,"weekday"].index.date)
+#n = 1 # increment by week
+for i in mondays:
+    if (i + three_weeks + one_week + datetime.timedelta(days=2)) <= last_friday:
+        # 19 days for training
+        train_start_date_dt = i #df.iloc[n,:].name.date()
+        train_end_date_dt = train_start_date + three_weeks #one day after actual last day as last day doesn't count
+        # 6 days for testing
+        unique_date_index = np.unique(df.index.date)
+        try:
+            train_end_index_num = int(np.where(unique_date_index == train_end_date - datetime.timedelta(days=1))[0])
+            test_start_date = unique_date_index[train_end_index_num + 2] #next business day
+        except TypeError:
+            problematic_date = train_end_date - datetime.timedelta(days=1)
+            if problematic_date.weekday() == 5:
+                train_end_index_num = int(np.where(unique_date_index == train_end_date + datetime.timedelta(days=2))[0])
+                test_start_date = unique_date_index[train_end_index_num] #next business day
+            elif problematic_date.weekday() == 6:
+                train_end_index_num = int(np.where(unique_date_index == train_end_date + datetime.timedelta(days=1))[0])
+                test_start_date = unique_date_index[train_end_index_num] #next business day
+            else:
+                raise TypeError
+        test_end_date_dt = test_start_date + one_week #one day after actual last day as last day doesn't count
 
 
-## Parameters
-trade_size = 20000
-# trading_date = "2018-03"
+        ## Parameters
+        trade_size = 20000
+        # trading_date = "2018-03"
 
-# For resampling
-resample_interval = "15T"
+        # For resampling
+        resample_interval = "15T"
 
-filter_days = []
-filter_hours = range(8,20) # UTC timezone
-filter_mins = []
-filter_secs = []
-
-
-
-# For assigning factors
-num_of_std_dev = 3
-lookback = 20 # Days
-index_frequency = pd.Timedelta(minutes=15)
-
-# For calculating factors
-stop_loss_buffer = 0.0010
-take_profit_buffer = 0.0010
+        filter_days = []
+        filter_hours = range(8,20) # UTC timezone
+        filter_mins = []
+        filter_secs = []
 
 
-## Filter for relevant trading period
-# analyzed_df = df[trading_date]
-analyzed_df = df.loc[start_date:end_date,:]
+        # For assigning factors
+        num_of_std_dev = 3
+        lookback = 20 # Days
+        index_frequency = pd.Timedelta(minutes=15)
+
+        # For calculating factors
+        stop_loss_buffer = 0.0010
+        take_profit_buffer = 0.0010
 
 
-## Resampling into 1 Minute bars
-min_1_analyzed_df = resample(analyzed_df, resample_interval)
+        ## Filter for relevant trading period
+        # analyzed_df = df[trading_date]
+        analyzed_df = df.loc[train_start_date_dt:end_date,:]
 
 
-## Calculate factors
-min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
+        ## Resampling into 1 Minute bars
+        min_1_analyzed_df = resample(analyzed_df, resample_interval)
 
 
-## Dropping N.As
-min_1_analyzed_df = drop_na(min_1_analyzed_df)
+        ## Calculate factors
+        min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
 
 
-## Include only certain times of the day
-min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
+        ## Dropping N.As
+        min_1_analyzed_df = drop_na(min_1_analyzed_df)
 
 
-## Including "Period Number"
-min_1_analyzed_df = include_period_num(min_1_analyzed_df)
+        ## Include only certain times of the day
+        min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
 
 
-## Calculating Factor's Values
-min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
-                                                    num_of_std_dev, 
-                                                    stop_loss_buffer, 
-                                                    take_profit_buffer)
+        ## Including "Period Number"
+        min_1_analyzed_df = include_period_num(min_1_analyzed_df)
 
 
-## Calculating Factor's Profit and Loss
-min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
-                                                                                            trade_size)
+        ## Calculating Factor's Values
+        min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
+                                                            num_of_std_dev, 
+                                                            stop_loss_buffer, 
+                                                            take_profit_buffer)
 
 
-## P&L time distribution profit and loss charts
-P_and_L_time_distribution(min_1_analyzed_df_dist_analysis)
+        ## Calculating Factor's Profit and Loss
+        min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
+                                                                                                    trade_size)
 
 
-## Result (P & L)
-Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size)
+        ## P&L time distribution profit and loss charts
+        P_and_L_time_distribution(min_1_analyzed_df_dist_analysis)
+
+
+        ## Result (P & L)
+        Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size)
