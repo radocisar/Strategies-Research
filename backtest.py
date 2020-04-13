@@ -107,20 +107,47 @@ def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis):
 ## Instrument
 inst = "EURGBP"
 
+## Load data
+df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,inst))
+
+## Adjusting start and end of time series
+# remove any dates before first Sunday (FX Specific)
+df["weekday"] = df.index.weekday
+first_sunday = df.drop_duplicates("weekday",keep="first").loc[df["weekday"] == 6,:].index[0].strftime(format="%Y-%m-%d") # FX specific
+df = df[first_sunday::]
+# remove any dates after last Friday
+last_friday = df.drop_duplicates("weekday",keep="last").loc[df["weekday"] == 4,:].index[0].strftime(format="%Y-%m-%d") # FX specific
+df = df[:last_friday]
+
+
+
+## Selecting training and testing periods
+three_weeks = datetime.timedelta(days=19) #for FX specifically
+one_week = datetime.timedelta(days=5) #for FX specifically
+n = 1 # increment by week
+# 19 days for training
+train_start_date = df.iloc[n,:].name.date()
+train_end_date = train_start_date + three_weeks #one day after actual last day as last day doesn't count
+# 6 days for testing
+unique_date_index = np.unique(df.index.date)
+train_end_index_num = int(np.where(unique_date_index == train_end_date - datetime.timedelta(days=1))[0])
+test_start_date = unique_date_index[train_end_index_num + 2] #next business day
+test_end_date = test_start_date + one_week #one day after actual last day as last day doesn't count
+
+
 ## Parameters
 trade_size = 20000
-trading_date = "2018-03"
+# trading_date = "2018-03"
 
-start_date = "2018-02-19"
-end_date = "2020-04-03"
+# For resampling
+resample_interval = "15T"
 
 filter_days = []
 filter_hours = range(8,20) # UTC timezone
 filter_mins = []
 filter_secs = []
 
-# For resampling
-resample_interval = "15T"
+
 
 # For assigning factors
 num_of_std_dev = 3
@@ -131,10 +158,8 @@ index_frequency = pd.Timedelta(minutes=15)
 stop_loss_buffer = 0.0010
 take_profit_buffer = 0.0010
 
-asdf
 
-## Load data
-df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,inst))
+## Filter for relevant trading period
 # analyzed_df = df[trading_date]
 analyzed_df = df.loc[start_date:end_date,:]
 
