@@ -155,7 +155,8 @@ for i in mondays:
         # trading_date = "2018-03"
 
         # For resampling
-        resample_interval = "15T"
+        frequency = 15
+        resample_interval = f"{frequency}T"
 
         filter_days = []
         filter_hours = range(8,20) # UTC timezone
@@ -166,7 +167,7 @@ for i in mondays:
         # For assigning factors
         num_of_std_dev = 3
         lookback = 20 # Days
-        index_frequency = pd.Timedelta(minutes=15)
+        index_frequency = pd.Timedelta(minutes=frequency)
 
         # For calculating factors
         stop_loss_buffer = 0.0010
@@ -175,7 +176,7 @@ for i in mondays:
 
         ## Filter for relevant trading period
         # analyzed_df = df[trading_date]
-        analyzed_df = df.loc[train_start_date_dt:end_date,:]
+        analyzed_df = df.loc[train_start_date_dt:train_end_date_dt,:]
 
 
         ## Resampling into 1 Minute bars
