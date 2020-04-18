@@ -11,10 +11,14 @@ import matplotlib.dates as mdates
 from mpl_finance import candlestick_ohlc
 import openpyxl
 import datetime as dt
-
+from sklearn.model_selection import ParameterGrid
 import Calculate_Factors
 import Calculate_Profit_Loss
 import Results_P_and_L
+import logging
+
+logging.basicConfig(filename='logging.log',level=logging.INFO, format='%(asctime)s %(message)s', \
+    datefmt='%m/%D/%Y %H:%M:%S')
 
 def resample(analyzed_df, resample_interval):
     min_1_low = analyzed_df.loc[:,"Low"].resample(resample_interval).apply(np.min)
@@ -30,7 +34,7 @@ def resample(analyzed_df, resample_interval):
 def assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency):
     min_1_analyzed_df_temp = min_1_analyzed_df
 
-    min_1_analyzed_df_temp["DateTime_UTC_column"] = min_1_analyzed_df_temp.index
+    min_1_analyzed_df_temp["datetime_UTC_column"] = min_1_analyzed_df_temp.index
     min_1_analyzed_df["Middle_Band"] = min_1_analyzed_df["Close"].rolling(lookback).mean()
     min_1_analyzed_df["Upper_Band"] = min_1_analyzed_df["Middle_Band"] + \
     (min_1_analyzed_df["Close"].rolling(lookback).std()*num_of_std_dev)
@@ -114,40 +118,40 @@ df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,ins
 # remove any dates before first Sunday (FX Specific)
 df["weekday"] = df.index.weekday
 first_sunday_str = df.drop_duplicates("weekday",keep="first").loc[df["weekday"] == 6,:].index[0].strftime(format="%Y-%m-%d") # FX specific
-df = df[first_sunday::]
+df = df[first_sunday_str::]
 # remove any dates after last Friday
 last_friday_str = df.drop_duplicates("weekday",keep="last").loc[df["weekday"] == 4,:].index[0].strftime(format="%Y-%m-%d") # FX specific
-df = df[:last_friday]
+df = df[:last_friday_str]
 
 
 
-## Selecting training and testing periods
-three_weeks_dt = datetime.timedelta(days=19) #for FX specifically
-one_week_dt = datetime.timedelta(days=5) #for FX specifically
+## Selecting, training and testing periods
+three_weeks_dt = dt.timedelta(days=19) #for FX specifically
+one_week_dt = dt.timedelta(days=5) #for FX specifically
 last_friday_dt = df.drop_duplicates("weekday",keep="last").loc[df["weekday"] == 4,:].index[0].date()
 mondays = np.unique(df.loc[df["weekday"]==0,"weekday"].index.date)
 #n = 1 # increment by week
 for i in mondays:
-    if (i + three_weeks + one_week + datetime.timedelta(days=2)) <= last_friday:
+    if (i + three_weeks_dt + one_week_dt + dt.timedelta(days=2)) <= last_friday_dt:
         # 19 days for training
         train_start_date_dt = i #df.iloc[n,:].name.date()
-        train_end_date_dt = train_start_date + three_weeks #one day after actual last day as last day doesn't count
+        train_end_date_dt = train_start_date_dt + three_weeks_dt #one day after actual last day as last day doesn't count
         # 6 days for testing
         unique_date_index = np.unique(df.index.date)
         try:
-            train_end_index_num = int(np.where(unique_date_index == train_end_date - datetime.timedelta(days=1))[0])
-            test_start_date = unique_date_index[train_end_index_num + 2] #next business day
+            train_end_index_num = int(np.where(unique_date_index == train_end_date_dt - dt.timedelta(days=1))[0])
+            test_start_date_dt = unique_date_index[train_end_index_num + 2] #next business day
         except TypeError:
-            problematic_date = train_end_date - datetime.timedelta(days=1)
+            problematic_date = train_end_date_dt - dt.timedelta(days=1)
             if problematic_date.weekday() == 5:
-                train_end_index_num = int(np.where(unique_date_index == train_end_date + datetime.timedelta(days=2))[0])
-                test_start_date = unique_date_index[train_end_index_num] #next business day
+                train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=2))[0])
+                test_start_date_dt = unique_date_index[train_end_index_num] #next business day
             elif problematic_date.weekday() == 6:
-                train_end_index_num = int(np.where(unique_date_index == train_end_date + datetime.timedelta(days=1))[0])
-                test_start_date = unique_date_index[train_end_index_num] #next business day
+                train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=1))[0])
+                test_start_date_dt = unique_date_index[train_end_index_num] #next business day
             else:
                 raise TypeError
-        test_end_date_dt = test_start_date + one_week #one day after actual last day as last day doesn't count
+        test_end_date_dt = test_start_date_dt + one_week_dt #one day after actual last day as last day doesn't count
 
 
         ## Parameters
@@ -156,8 +160,7 @@ for i in mondays:
 
         # For resampling
         frequency = 15
-        resample_interval = f"{frequency}T"
-
+        
         filter_days = []
         filter_hours = range(8,20) # UTC timezone
         filter_mins = []
@@ -167,11 +170,22 @@ for i in mondays:
         # For assigning factors
         num_of_std_dev = 3
         lookback = 20 # Days
-        index_frequency = pd.Timedelta(minutes=frequency)
+        
 
         # For calculating factors
         stop_loss_buffer = 0.0010
         take_profit_buffer = 0.0010
+
+
+        ## Parameter Grid
+        params = {"frequency":15, # For resampling
+                "filter_hours":range(8,20), # For selecting most suitable tme of day to trade
+                "num_of_std_dev":3, # For assigning factors
+                "lookback":20, # For assigning factors
+                "stop_loss_buffer":0.0010, # For calculating factors
+                "take_profit_buffer":0.0010} # For calculating factors
+        
+        # ParameterGrid({})
 
 
         ## Filter for relevant trading period
@@ -180,10 +194,12 @@ for i in mondays:
 
 
         ## Resampling into 1 Minute bars
+        resample_interval = f"{frequency}T"
         min_1_analyzed_df = resample(analyzed_df, resample_interval)
 
 
-        ## Calculate factors
+        ## Assign factors
+        index_frequency = pd.Timedelta(minutes=frequency)
         min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
 
 
@@ -216,4 +232,24 @@ for i in mondays:
 
 
         ## Result (P & L)
-        Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size)
+        num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+            commission, slippage, net_absolute_profit_loss, \
+            net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size)
+        
+        logging.info(f"Train Dates: {train_start_date_dt, train_end_date_dt}")
+        logging.info(f"Test Dates: {test_start_date_dt, test_end_date_dt}")
+        logging.info(f"Parameters: {frequency, filter_hours, num_of_std_dev, lookback, stop_loss_buffer, take_profit_buffer}")
+        logging.info(f"-----RESULTS-----")
+        logging.info(f"Profit and loss: {P_N_L_Stats}")
+        logging.info(f"Number of trades: {num_of_trades}")
+        logging.info(f"Gross absolute profit/loss: {gross_absolute_profit_loss}")
+        logging.info(f"Gross % profit/loss: {gross_percent_profit_loss}")
+        logging.info(f"Commission: {commission}")
+        logging.info(f"Slippage: {slippage}")
+        logging.info(f"Net absolute profit/loss: {net_absolute_profit_loss}")
+        logging.info(f"Net % profit/loss: {net_percent_profit_loss}")
+        logging.info(f"-----------------")
+        logging.info(f"-----------------")
+
+logging.shutdown()
+

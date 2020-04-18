@@ -58,3 +58,6 @@ def results_P_and_L(min_1_analyzed_df, trade_size):
     # min_1_analyzed_df["SMA10"].head(100).plot(ax=ax1, color="r")
     # ax3 = plt.subplot(3,1,1)
     # min_1_analyzed_df["SMA20"].head(100).plot(ax=ax1, color="y")
+
+    return num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+        commission, slippage, net_absolute_profit_loss, net_percent_profit_loss
