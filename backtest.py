@@ -93,21 +93,31 @@ def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_
     min_1_analyzed_df_dist_analysis_exists_only.loc[:,"Hour_of_Entry"] = min_1_analyzed_df_dist_analysis_exists_only \
     ["Trade_Entry_Time_Shifted"].apply(lambda x: x.hour)
 
+    fig = plt.figure(figsize=(10,10))
+    ax1 = fig.add_subplot(2,1,1)
+    ax2 = fig.add_subplot(2,1,2)
+
     ## Time distribution of Profits
     min_1_analyzed_df_dist_analysis_exists_only[min_1_analyzed_df_dist_analysis_exists_only["Trade_Prft_Lss"]>0] \
-    ["Hour_of_Entry"].hist(bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,23]);
-    plt.title("Time distribution of profits")
+    ["Hour_of_Entry"].hist(bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,23], ax=ax1);
+    ax1.set_title("Time distribution of profits")
     # plt.draw()
     # plt.show(block=False)
-    plt.savefig(f"./Charts/Profit_{train_start_date_str}_{train_end_date_str}.png")
+    # plt.xaxis_date()
+    ax1.autoscale_view()
+    # plt.savefig(f"./Charts/Profit_{train_start_date_str}_{train_end_date_str}.png")
 
     ## Time distribution of losses
     min_1_analyzed_df_dist_analysis_exists_only[min_1_analyzed_df_dist_analysis_exists_only["Trade_Prft_Lss"]<=0] \
-    ["Hour_of_Entry"].hist(bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]);
-    plt.title("Time distribution of losses")
+    ["Hour_of_Entry"].hist(bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23], ax=ax2);
+    ax2.set_title("Time distribution of losses")
     # plt.draw()
     # plt.show(block=False)
-    plt.savefig(f"./Charts/Loss_{train_start_date_str}_{train_end_date_str}.png"")
+    # plt.xaxis_date()
+    ax2.autoscale_view()
+    
+    plt.savefig(f"./Charts/Loss_{train_start_date_str}_{train_end_date_str}.png")
+    plt.close(fig=fig)
     
 
 
@@ -147,7 +157,10 @@ for i in mondays:
             train_end_index_num = int(np.where(unique_date_index == train_end_date_dt - dt.timedelta(days=1))[0])
             test_start_date_dt = unique_date_index[train_end_index_num + 2] #next business day
         except TypeError:
-            problematic_date = train_end_date_dt - dt.timedelta(days=1)
+            problematic_date = train_end_date_dt # - dt.timedelta(days=1)
+            # if problematic_date.weekday() == 4:
+            #     train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=2))[0])
+            #     test_start_date_dt = unique_date_index[train_end_index_num] #next business day
             if problematic_date.weekday() == 5:
                 train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=2))[0])
                 test_start_date_dt = unique_date_index[train_end_index_num] #next business day
@@ -195,12 +208,12 @@ for i in mondays:
 
         ## Filter for relevant trading period
         # analyzed_df = df[trading_date]
-        analyzed_df = df.loc[train_start_date_dt:train_end_date_dt,:]
+        analyzed_df = df.loc[train_start_date_dt:train_end_date_dt,:].copy()
 
 
         ## Resampling into 1 Minute bars
         resample_interval = f"{frequency}T"
-        min_1_analyzed_df = resample(analyzed_df, resample_interval)
+        min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
 
 
         ## Assign factors
