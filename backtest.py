@@ -7,6 +7,7 @@ import shutil
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import draw
 import matplotlib.dates as mdates
 from mpl_finance import candlestick_ohlc
 import openpyxl
@@ -34,7 +35,7 @@ def resample(analyzed_df, resample_interval):
 def assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency):
     min_1_analyzed_df_temp = min_1_analyzed_df
 
-    min_1_analyzed_df_temp["datetime_UTC_column"] = min_1_analyzed_df_temp.index
+    min_1_analyzed_df_temp["DateTime_UTC_column"] = min_1_analyzed_df_temp.index
     min_1_analyzed_df["Middle_Band"] = min_1_analyzed_df["Close"].rolling(lookback).mean()
     min_1_analyzed_df["Upper_Band"] = min_1_analyzed_df["Middle_Band"] + \
     (min_1_analyzed_df["Close"].rolling(lookback).std()*num_of_std_dev)
@@ -84,25 +85,27 @@ def include_period_num(min_1_analyzed_df):
 
 ## P&L time distribution
 def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis):
-    min_1_analyzed_df_dist_analysis["Trade_Entry_Time"] = min_1_analyzed_df_dist_analysis.index
-    min_1_analyzed_df_dist_analysis["Trade_Entry_Time_Shifted"] = min_1_analyzed_df_dist_analysis["Trade_Entry_Time"].shift(1)
+    min_1_analyzed_df_dist_analysis.loc[:,"Trade_Entry_Time"] = min_1_analyzed_df_dist_analysis.index
+    min_1_analyzed_df_dist_analysis.loc[:,"Trade_Entry_Time_Shifted"] = min_1_analyzed_df_dist_analysis["Trade_Entry_Time"].shift(1)
     min_1_analyzed_df_dist_analysis.drop("Trade_Entry_Time",axis=1, inplace=True)
     min_1_analyzed_df_dist_analysis_exists_only = min_1_analyzed_df_dist_analysis.loc[((min_1_analyzed_df_dist_analysis \
     ["Action"] == "Took Profit") | (min_1_analyzed_df_dist_analysis["Action"] == "Stopped Out")),:]
-    min_1_analyzed_df_dist_analysis_exists_only["Hour_of_Entry"] = min_1_analyzed_df_dist_analysis_exists_only \
+    min_1_analyzed_df_dist_analysis_exists_only.loc[:,"Hour_of_Entry"] = min_1_analyzed_df_dist_analysis_exists_only \
     ["Trade_Entry_Time_Shifted"].apply(lambda x: x.hour)
 
     ## Time distribution of Profits
     min_1_analyzed_df_dist_analysis_exists_only[min_1_analyzed_df_dist_analysis_exists_only["Trade_Prft_Lss"]>0] \
     ["Hour_of_Entry"].hist(bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,23]);
     plt.title("Time distribution of profits")
-    plt.show()
+    # plt.draw()
+    plt.show(block=False)
 
     ## Time distribution of losses
     min_1_analyzed_df_dist_analysis_exists_only[min_1_analyzed_df_dist_analysis_exists_only["Trade_Prft_Lss"]<=0] \
     ["Hour_of_Entry"].hist(bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]);
     plt.title("Time distribution of losses")
-    plt.show()    
+    # plt.draw()
+    plt.show(block=False)
     
 
 

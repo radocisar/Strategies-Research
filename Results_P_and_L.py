@@ -53,7 +53,7 @@ def results_P_and_L(min_1_analyzed_df, trade_size):
     ax5 = plt.subplot(2,1,2)
     ax5.set_title("Gross P&L", fontsize=20)
     pnl_chart_df_cumsum.plot(ax=ax5, linestyle="-", marker="o")
-    plt.show()
+    plt.show(block=False)
     # ax2 = plt.subplot(3,1,1)
     # min_1_analyzed_df["SMA10"].head(100).plot(ax=ax1, color="r")
     # ax3 = plt.subplot(3,1,1)
