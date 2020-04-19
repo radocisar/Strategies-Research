@@ -84,7 +84,7 @@ def include_period_num(min_1_analyzed_df):
     return min_1_analyzed_df
 
 ## P&L time distribution
-def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis):
+def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_str, train_end_date_str):
     min_1_analyzed_df_dist_analysis.loc[:,"Trade_Entry_Time"] = min_1_analyzed_df_dist_analysis.index
     min_1_analyzed_df_dist_analysis.loc[:,"Trade_Entry_Time_Shifted"] = min_1_analyzed_df_dist_analysis["Trade_Entry_Time"].shift(1)
     min_1_analyzed_df_dist_analysis.drop("Trade_Entry_Time",axis=1, inplace=True)
@@ -98,14 +98,16 @@ def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis):
     ["Hour_of_Entry"].hist(bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,23]);
     plt.title("Time distribution of profits")
     # plt.draw()
-    plt.show(block=False)
+    # plt.show(block=False)
+    plt.savefig(f"./Charts/Profit_{train_start_date_str}_{train_end_date_str}.png")
 
     ## Time distribution of losses
     min_1_analyzed_df_dist_analysis_exists_only[min_1_analyzed_df_dist_analysis_exists_only["Trade_Prft_Lss"]<=0] \
     ["Hour_of_Entry"].hist(bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]);
     plt.title("Time distribution of losses")
     # plt.draw()
-    plt.show(block=False)
+    # plt.show(block=False)
+    plt.savefig(f"./Charts/Loss_{train_start_date_str}_{train_end_date_str}.png"")
     
 
 
@@ -231,13 +233,15 @@ for i in mondays:
 
 
         ## P&L time distribution profit and loss charts
-        P_and_L_time_distribution(min_1_analyzed_df_dist_analysis)
+        P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
+            , train_end_date_dt.strftime(format="%Y%m%d"))
 
 
         ## Result (P & L)
         num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
             commission, slippage, net_absolute_profit_loss, \
-            net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size)
+            net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
+                train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
         
         logging.info(f"Train Dates: {train_start_date_dt, train_end_date_dt}")
         logging.info(f"Test Dates: {test_start_date_dt, test_end_date_dt}")

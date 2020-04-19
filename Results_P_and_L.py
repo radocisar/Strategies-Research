@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-def results_P_and_L(min_1_analyzed_df, trade_size):
+def results_P_and_L(min_1_analyzed_df, trade_size, train_start_date_str, train_end_date_str):
     # Gross P&L:
     gross_absolute_profit_loss = min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].sum()
     gross_percent_profit_loss = (gross_absolute_profit_loss/trade_size)*100
@@ -47,13 +47,14 @@ def results_P_and_L(min_1_analyzed_df, trade_size):
     pnl_chart_df_less_comm_and_slip_cumsum = pnl_chart_df_less_comm_and_slip[pnl_chart_df_less_comm_and_slip < 1000000000].cumsum()
 
     fig1 = plt.figure(figsize=(15,15))
-    ax4 = plt.subplot(2,1,1)
+    ax4 = fig1.subplot(2,1,1)
     ax4.set_title("Net P&L", fontsize=20)
     pnl_chart_df_less_comm_and_slip_cumsum.plot(ax=ax4, linestyle="-", marker="o")
-    ax5 = plt.subplot(2,1,2)
+    ax5 = fig1.subplot(2,1,2)
     ax5.set_title("Gross P&L", fontsize=20)
     pnl_chart_df_cumsum.plot(ax=ax5, linestyle="-", marker="o")
-    plt.show(block=False)
+    # plt.show(block=False)
+    plt.savefig(f"./Charts/P_and_L_{train_start_date_str}_{train_end_date_str}.png"")
     # ax2 = plt.subplot(3,1,1)
     # min_1_analyzed_df["SMA10"].head(100).plot(ax=ax1, color="r")
     # ax3 = plt.subplot(3,1,1)
