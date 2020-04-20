@@ -186,7 +186,7 @@ for i in mondays:
                     # if neither Monday nor Tuesday is a true date in my data
                     raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
             else:
-                raise TypeError("when selecting "test_start_date_dt" the "train_end_date_dt" is neither Saturday nor Sunday")
+                raise TypeError("when selecting \"test_start_date_dt\" the \"train_end_date_dt\" is neither Saturday nor Sunday")
         test_end_date_dt = test_start_date_dt + one_week_dt #one day after actual last day as last day doesn't count
 
 
