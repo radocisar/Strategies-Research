@@ -153,40 +153,57 @@ for i in mondays:
         train_end_date_dt = train_start_date_dt + three_weeks_dt #one day after actual last day as last day doesn't count
         # continue with next i if there is less than 10 training data days
         if (train_start_date_dt - train_end_date_dt) < dt.timedelta(days=10):
+            logging.info(f"ERROR...HENCE SKIPPING: (train_start_date_dt - train_end_date_dt) is less than dt.timedelta(days=10): \
+                train_start_date_dt: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
             continue
         # 6 days for testing
         unique_date_index = np.unique(df.index.date)
-        try:
-            train_end_index_num = int(np.where(unique_date_index == train_end_date_dt - dt.timedelta(days=1))[0])
-            test_start_date_dt = unique_date_index[train_end_index_num + 2] #next business day
-        except TypeError:
-            problematic_date = train_end_date_dt # - dt.timedelta(days=1)
-            if problematic_date.weekday() == 5:
-                try:
-                    # if next Monday is a true date in my d
-                    train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=2))[0])
-                    test_start_date_dt = unique_date_index[train_end_index_num] #next business day
-                except TypeError:
-                    # if next Tuesday is a true date in my data
-                    train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=3))[0])
-                    test_start_date_dt = unique_date_index[train_end_index_num] #next business day
-                else:
-                    # if neither Monday nor Tuesday is a true date in my data
-                    raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
-            elif problematic_date.weekday() == 6:
-                try:
-                    # if next Monday is a true date in my d
-                    train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=1))[0])
-                    test_start_date_dt = unique_date_index[train_end_index_num] #next business day
-                except TypeError:
-                    # if next Tuesday is a true date in my data
-                    train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=2))[0])
-                    test_start_date_dt = unique_date_index[train_end_index_num] #next business day
-                else:
-                    # if neither Monday nor Tuesday is a true date in my data
-                    raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
+        # try:
+        #     train_end_index_num = int(np.where(unique_date_index == train_end_date_dt - dt.timedelta(days=1))[0])
+        #     try:
+        #         # if next Monday is a true date in my d
+        #         test_start_date_dt = unique_date_index[train_end_index_num + 2] #next business day
+        #     except TypeError:
+        #         # if next Tuesday is a true date in my data
+        #         train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=2))[0])
+        #         test_start_date_dt = unique_date_index[train_end_index_num] #next business day
+        #     else:
+        #         # if neither Monday nor Tuesday is a true date in my data
+        #         raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
+        # except TypeError:
+        #     problematic_date = train_end_date_dt # - dt.timedelta(days=1)
+        if train_end_date_dt.weekday() == 5:
+            try:
+                # if next Monday is a true date in my d
+                train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=2))[0])
+                test_start_date_dt = unique_date_index[train_end_index_num] #next business day
+            except TypeError:
+                # if next Tuesday is a true date in my data
+                train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=3))[0])
+                test_start_date_dt = unique_date_index[train_end_index_num] #next business day
             else:
-                raise TypeError("when selecting \"test_start_date_dt\" the \"train_end_date_dt\" is neither Saturday nor Sunday")
+                # if neither Monday nor Tuesday is a true date in my data
+                # raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
+                logging.info(f"ERROR...HENCE SKIPPING: when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a \
+                    true date in my data: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
+        elif problematic_date.weekday() == 6:
+            try:
+                # if next Monday is a true date in my d
+                train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=1))[0])
+                test_start_date_dt = unique_date_index[train_end_index_num] #next business day
+            except TypeError:
+                # if next Tuesday is a true date in my data
+                train_end_index_num = int(np.where(unique_date_index == train_end_date_dt + dt.timedelta(days=2))[0])
+                test_start_date_dt = unique_date_index[train_end_index_num] #next business day
+            else:
+                # if neither Monday nor Tuesday is a true date in my data
+                # raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
+                logging.info(f"ERROR...HENCE SKIPPING: when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a \
+                    true date in my data: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
+        else:
+            raise TypeError("when selecting \"test_start_date_dt\" the \"train_end_date_dt\" is neither Saturday nor Sunday")
+            logging.info(f"ERROR...HENCE SKIPPING: when selecting \"test_start_date_dt\" the \"train_end_date_dt\" is neither \
+                Saturday nor Sunday: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
         test_end_date_dt = test_start_date_dt + one_week_dt #one day after actual last day as last day doesn't count
 
 
