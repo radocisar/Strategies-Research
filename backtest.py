@@ -172,7 +172,7 @@ for i in mondays:
                     test_start_date_dt = unique_date_index[train_end_index_num] #next business day
                 else:
                     # if neither Monday nor Tuesday is a true date in my data
-                    raise TypeError("when selecting "test_start_date_dt" neither next Monday nor Tuesday is a true date in my data")
+                    raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
             elif problematic_date.weekday() == 6:
                 try:
                     # if next Monday is a true date in my d
@@ -184,7 +184,7 @@ for i in mondays:
                     test_start_date_dt = unique_date_index[train_end_index_num] #next business day
                 else:
                     # if neither Monday nor Tuesday is a true date in my data
-                    raise TypeError("when selecting "test_start_date_dt" neither next Monday nor Tuesday is a true date in my data")
+                    raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
             else:
                 raise TypeError("when selecting "test_start_date_dt" the "train_end_date_dt" is neither Saturday nor Sunday")
         test_end_date_dt = test_start_date_dt + one_week_dt #one day after actual last day as last day doesn't count
