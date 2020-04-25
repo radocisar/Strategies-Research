@@ -223,30 +223,32 @@ for i in mondays:
             continue
         ## Assign test_end_date_dt
         try:
-            test_end_index_num = int(np.where(unique_date_index == test_start_date_dt + one_week_dt)[0])
-            test_end_date_dt = unique_date_index[test_end_index_num] #Friday
-        # test_end_date_dt = test_start_date_dt + one_week_dt #one day after actual last day as last day doesn't count
+            # if starting from Saturday and Friday is available
+            test_end_index_num = int(np.where(unique_date_index == test_start_date_dt + one_week_dt - dt.timedelta(days=1))[0])
+            test_end_date_dt = unique_date_index[test_end_index_num] + dt.timedelta(days=1) # assign Friday (show Saturday)
         except TypeError:
             try:
-                test_end_index_num = int(np.where(unique_date_index == test_start_date_dt + one_week_dt - dt.timedelta(days=1))[0])
-                test_end_date_dt = unique_date_index[test_end_index_num] #next business day
-            except TypeError:
-                try:
+                # if starting from Saturday and Thursday is available or starting from Sunday and Friday is available
                 test_end_index_num = int(np.where(unique_date_index == test_start_date_dt + one_week_dt - dt.timedelta(days=2))[0])
-                test_end_date_dt = unique_date_index[test_end_index_num] #next business day
-                except TypeError:
-                    logging.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_end_date_dt\" neither Friday nor Thursday exis: \
-                        test_start_date_dt: {test_start_date_dt}")
-                    logging.info(f"-----------------")
-                    logging.info(f"-----------------")
-                    continue
-        if (test_end_date_dt - test_start_date_dt) < (one_week_dt - dt.timedelta(days=4)) or \
-            (test_end_date_dt - test_start_date_dt) > (one_week_dt + dt.timedelta(days=1)):
-            logging.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - test_start_date_dt) is less than dt.timedelta(days=10): \
-                train_start_date_dt: train_start_date_dt: {train_start_date_dt} - test_start_date_dt: {test_start_date_dt}")
-            logging.info(f"-----------------")
-            logging.info(f"-----------------")
-            continue
+                test_end_date_dt = unique_date_index[test_end_index_num] + dt.timedelta(days=1) # assign Friday (show Saturday) or Thursday (show Friday)
+            except TypeError:
+                # try:
+                #     test_end_index_num = int(np.where(unique_date_index == test_start_date_dt + one_week_dt - dt.timedelta(days=2))[0])
+                #     test_end_date_dt = unique_date_index[test_end_index_num] #next business day
+                # except TypeError:
+                logging.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_end_date_dt\" neither Friday nor \
+                    Thursday exist or \"test_end_date_dt\" is a Tuesday and Friday doesn't exist: \
+                    test_start_date_dt: {test_start_date_dt}")
+                logging.info(f"-----------------")
+                logging.info(f"-----------------")
+                continue
+        # if (test_end_date_dt - test_start_date_dt) < (one_week_dt - dt.timedelta(days=4)) or \
+        #     (test_end_date_dt - test_start_date_dt) > (one_week_dt + dt.timedelta(days=1)):
+        #     logging.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - test_start_date_dt) is less than dt.timedelta(days=10): \
+        #         train_start_date_dt: train_start_date_dt: {train_start_date_dt} - test_start_date_dt: {test_start_date_dt}")
+        #     logging.info(f"-----------------")
+        #     logging.info(f"-----------------")
+        #     continue
 
         # TODO: test_start_date_dt should be a Saturday
         # TODO: Why is test_start_date_dt and test_start_date_dt not being used?
