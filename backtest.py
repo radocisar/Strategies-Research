@@ -17,6 +17,7 @@ import Calculate_Factors
 import Calculate_Profit_Loss
 import Results_P_and_L
 import logging
+from tqdm import tqdm
 
 # logging.basicConfig(filename='logging.log',level=logging.INFO, format='%(asctime)s %(message)s', \
 #     datefmt='%m/%D/%Y %H:%M:%S')
@@ -166,7 +167,7 @@ one_week_dt = dt.timedelta(days=5) #for FX specifically
 last_friday_dt = df.drop_duplicates("weekday",keep="last").loc[df["weekday"] == 4,:].index[0].date()
 mondays = np.unique(df.loc[df["weekday"]==0,"weekday"].index.date)
 #n = 1 # increment by week
-for i in mondays:
+for i in tqdm(mondays, leave=False):
     if (i + three_weeks_dt + one_week_dt + dt.timedelta(days=2)) <= last_friday_dt:
         ## Assign train_start_date_dt
         # 19 days for training
@@ -298,9 +299,9 @@ for i in mondays:
         # stop_loss_buffer = 0.0010
         # take_profit_buffer = 0.0010
 
-
+        ## Testing run
         ## Parameter Grid
-        params = {"trade_size":20000,
+            params = {"trade_size":20000,
                 "frequency":15, # For resampling
                 "filter_hours":range(8,20), # For selecting most suitable tme of day to trade
                 "num_of_std_dev":3, # For assigning factors
@@ -319,28 +320,22 @@ for i in mondays:
             stop_loss_buffer = param["stop_loss_buffer"]
             take_profit_buffer = param["take_profit_buffer"]
 
-
             ## Resampling into 1 Minute bars
             resample_interval = f"{frequency}T"
             min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
-
 
             ## Assign factors
             index_frequency = pd.Timedelta(minutes=frequency)
             min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
 
-
             ## Dropping N.As
             min_1_analyzed_df = drop_na(min_1_analyzed_df)
-
 
             ## Include only certain times of the day
             min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
 
-
             ## Including "Period Number"
             min_1_analyzed_df = include_period_num(min_1_analyzed_df)
-
 
             ## Calculating Factor's Values
             min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
@@ -348,11 +343,9 @@ for i in mondays:
                                                                 stop_loss_buffer, 
                                                                 take_profit_buffer)
 
-
             ## Calculating Factor's Profit and Loss
             min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
                                                                                                         trade_size)
-
 
             ## P&L time distribution profit and loss charts
             P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
@@ -364,7 +357,6 @@ for i in mondays:
                 net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
                     train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
         
-
             param_search_logger.info(f"{{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt}, \"Test End Date\": \
                 {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \"filter_hours\":{filter_hours}, \
                 \"num_of_std_dev\":{num_of_std_dev}, \"lookback\":{lookback}, \"stop_loss_buffer\":{stop_loss_buffer}, \"take_profit_buffer\":{take_profit_buffer}}} \
@@ -378,24 +370,69 @@ for i in mondays:
         ## Best parameters combination per training period
         best_params = max(tested_params, key=tested_params.get)
 
-        # TODO
+        ## Testing run
         ### run best model against test period
+        trade_size = best_params["trade_size"]
+        frequency = best_params["frequency"]
+        filter_hours = best_params["filter_hours"]
+        num_of_std_dev = param["num_of_std_dev"]
+        lookback = best_params["lookback"]
+        stop_loss_buffer = best_params["stop_loss_buffer"]
+        take_profit_buffer = best_params["take_profit_buffer"]
 
+        ## Resampling into 1 Minute brs
+        resample_interval = f"{frequenc}T"
+        min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
+
+        ## Assign factors
+        index_frequency = pd.Timedelta(minutes=frequency)
+        min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
+
+        ## Dropping N.As
+        min_1_analyzed_df = drop_na(min_1_analyzed_df)
+
+        ## Include only certain times of the day
+        min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
+
+        ## Including "Period Number"
+        min_1_analyzed_df = include_period_num(min_1_analyzed_df)
+
+        ## Calculating Factor's Values
+        min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
+                                                            num_of_std_dev, 
+                                                            stop_loss_buffer, 
+                                                            take_profit_buffer)
+
+        ## Calculating Factor's Profit and Loss
+        min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
+                                                                                                    trade_size)
+
+        ## Result (P & L)
+        num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+            commission, slippage, net_absolute_profit_loss, \
+            net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
+                train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
+
+        final_results_logger.info(f"{{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt}, \"Test End Date\": \
+                {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \
+                \"num_of_std_dev\":{num_of_std_dev}, \"lookback\":{lookback}, \"stop_loss_buffer\":{stop_loss_buffer}, \"take_profit_buffer\":{take_profit_buffer}}} \
+                | {{\"Number of trades\":{num_of_trades}, \"Gross absolute profit/loss\":{gross_absolute_profit_loss}, \"Gross per cent profit/loss\":{gross_percent_profit_loss}, \
+                    \"Commission\":{commission}, \"Slippage\":{slippage}, \"Net absolute profit/loss\":{net_absolute_profit_loss}, \"Net % profit/loss\":{net_percent_profit_loss}}}")
         
-        final_results_logger.info(f"Train Dates: {train_start_date_dt, train_end_date_dt}")
-        final_results_logger.info(f"Test Dates: {test_start_date_dt, test_end_date_dt}")
-        final_results_logger.info(f"Parameters: {frequency, filter_hours, num_of_std_dev, lookback, stop_loss_buffer, take_profit_buffer}")
-        final_results_logger.info(f"-----RESULTS-----")
-        final_results_logger.info(f"Profit and loss: {P_N_L_Stats}")
-        final_results_logger.info(f"Number of trades: {num_of_trades}")
-        final_results_logger.info(f"Gross absolute profit/loss: {gross_absolute_profit_loss}")
-        final_results_logger.info(f"Gross % profit/loss: {gross_percent_profit_loss}")
-        final_results_logger.info(f"Commission: {commission}")
-        final_results_logger.info(f"Slippage: {slippage}")
-        final_results_logger.info(f"Net absolute profit/loss: {net_absolute_profit_loss}")
-        final_results_logger.info(f"Net % profit/loss: {net_percent_profit_loss}")
-        final_results_logger.info(f"-----------------")
-        final_results_logger.info(f"-----------------")
+        # final_results_logger.info(f"Train Dates: {train_start_date_dt, train_end_date_dt}")
+        # final_results_logger.info(f"Test Dates: {test_start_date_dt, test_end_date_dt}")
+        # final_results_logger.info(f"Parameters: {frequency, filter_hours, num_of_std_dev, lookback, stop_loss_buffer, take_profit_buffer}")
+        # final_results_logger.info(f"-----RESULTS-----")
+        # final_results_logger.info(f"Profit and loss: {P_N_L_Stats}")
+        # final_results_logger.info(f"Number of trades: {num_of_trades}")
+        # final_results_logger.info(f"Gross absolute profit/loss: {gross_absolute_profit_loss}")
+        # final_results_logger.info(f"Gross % profit/loss: {gross_percent_profit_loss}")
+        # final_results_logger.info(f"Commission: {commission}")
+        # final_results_logger.info(f"Slippage: {slippage}")
+        # final_results_logger.info(f"Net absolute profit/loss: {net_absolute_profit_loss}")
+        # final_results_logger.info(f"Net % profit/loss: {net_percent_profit_loss}")
+        # final_results_logger.info(f"-----------------")
+        # final_results_logger.info(f"-----------------")
 
 final_results_logger.shutdown()
-
+param_search_logger.shutdown()
