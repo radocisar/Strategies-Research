@@ -301,17 +301,25 @@ for i in tqdm(mondays, leave=False):
 
         ## Testing run
         ## Parameter Grid
-            params = {"trade_size":20000,
-                "frequency":15, # For resampling
-                "filter_hours":range(8,20), # For selecting most suitable tme of day to trade
-                "num_of_std_dev":3, # For assigning factors
-                "lookback":20, # For assigning factors
-                "stop_loss_buffer":0.0010, # For calculating factors
-                "take_profit_buffer":0.0010} # For calculating factors
-        
+        """
+        frequency" - For resampling
+        "filter_hours" - For selecting most suitable tme of day to trade
+        "num_of_std_dev" - For assigning factors
+        "lookback" -  For assigning factors
+        "stop_loss_buffer" - For calculating factors
+        "take_profit_buffer" - For calculating factors
+        """
+        params = {"trade_size":20000,
+            "frequency":15,
+            "filter_hours":range(8,20),
+            "num_of_std_dev":3,
+            "lookback":20,
+            "stop_loss_buffer":0.0010,
+            "take_profit_buffer":0.0010}
+
         tested_params = {}
 
-        for param ParameterGrid(params):
+        for param in ParameterGrid(params):
             trade_size = param["trade_size"]
             frequency = param["frequency"]
             filter_hours = param["filter_hours"]
