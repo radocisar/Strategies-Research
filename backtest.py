@@ -19,14 +19,12 @@ import Results_P_and_L
 import logging
 from tqdm import tqdm
 
-# logging.basicConfig(filename='logging.log',level=logging.INFO, format='%(asctime)s %(message)s', \
-#     datefmt='%m/%D/%Y %H:%M:%S')
-param_search_logger = logging.getLogger()
+param_search_logger = logging.getLogger("param_search_logger")
 param_search_logger.setLevel(logging.INFO)
 param_search_handler = logging.FileHandler(filename='param_search_log.log')
 param_search_handler.setLevel(logging.INFO)
 
-final_results_logger = logging.getLogger()
+final_results_logger = logging.getLogger("final_results_logger")
 final_results_logger.setLevel(logging.INFO)
 final_results_handler = logging.FileHandler(filename='final_results_log.log')
 final_results_handler.setLevel(logging.INFO)
@@ -365,10 +363,10 @@ try:
                     net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
                         train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
             
-                param_search_logger.info(f"{{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt}, \"Test End Date\":
-                {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \"filter_hours\":{filter_hours},
-                \"num_of_std_dev\":{num_of_std_dev}, \"lookback\":{lookback}, \"stop_loss_buffer\":{stop_loss_buffer}, \"take_profit_buffer\":{take_profit_buffer}}} 
-                | {{\"Number of trades\":{num_of_trades}, \"Gross absolute profit/loss\":{gross_absolute_profit_loss}, \"Gross per cent profit/loss\":{gross_percent_profit_loss},
+                param_search_logger.info(f"{{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt},\
+                \"Test End Date\": {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \"filter_hours\":{filter_hours},\
+                \"num_of_std_dev\":{num_of_std_dev}, \"lookback\":{lookback}, \"stop_loss_buffer\":{stop_loss_buffer}, \"take_profit_buffer\":{take_profit_buffer}}} | \
+                {{\"Number of trades\":{num_of_trades}, \"Gross absolute profit/loss\":{gross_absolute_profit_loss}, \"Gross per cent profit/loss\":{gross_percent_profit_loss},\
                 \"Commission\":{commission}, \"Slippage\":{slippage}, \"Net absolute profit/loss\":{net_absolute_profit_loss}, \"Net % profit/loss\":{net_percent_profit_loss}}}")
 
                 ## Log parameteres used in training + net profit
