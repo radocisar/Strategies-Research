@@ -18,8 +18,28 @@ import Calculate_Profit_Loss
 import Results_P_and_L
 import logging
 
-logging.basicConfig(filename='logging.log',level=logging.INFO, format='%(asctime)s %(message)s', \
-    datefmt='%m/%D/%Y %H:%M:%S')
+# logging.basicConfig(filename='logging.log',level=logging.INFO, format='%(asctime)s %(message)s', \
+#     datefmt='%m/%D/%Y %H:%M:%S')
+param_search_logger = logging.getLogger()
+param_search_logger.setLevel(logging.INFO)
+param_search_handler = logging.FileHandler(filename='param_search_log.log')
+param_search_handler.setLevel(logging.INFO)
+
+final_results_logger = logging.getLogger()
+final_results_logger.setLevel(logging.INFO)
+final_results_handler = logging.FileHandler(filename='final_results_log.log')
+final_results_handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s | %(message)s')
+
+param_search_handler.setFormatter(formatter)
+final_results_handler.setFormatter(formatter)
+
+param_search_logger.addHandler(param_search_handler)
+final_results_logger.addHandler(final_results_handler)
+
+
+
 
 def resample(analyzed_df, resample_interval):
     min_1_low = analyzed_df.loc[:,"Low"].resample(resample_interval).apply(np.min)
@@ -156,10 +176,10 @@ for i in mondays:
         # continue with next i if there is less than 10 training data days
         if (train_end_date_dt - train_start_date_dt) < (three_weeks_dt - dt.timedelta(days=4)) or \
             (train_end_date_dt - train_start_date_dt) > (three_weeks_dt + dt.timedelta(days=1)):
-            logging.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - train_end_date_dt) is less than dt.timedelta(days=10): \
+            final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - train_end_date_dt) is less than dt.timedelta(days=10): \
                 train_start_date_dt: train_start_date_dt: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
-            logging.info(f"-----------------")
-            logging.info(f"-----------------")
+            final_results_logger.info(f"-----------------")
+            final_results_logger.info(f"-----------------")
             continue
         ## Assign test_start_date_dt 
         # 6 days for testing
@@ -191,10 +211,10 @@ for i in mondays:
                 except  TypeError:
                     # if neither Monday nor Tuesday is a true date in my data
                     # raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
-                    logging.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a \
+                    final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a \
                         true date in my data: train_start_date_dt: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
-                    logging.info(f"-----------------")
-                    logging.info(f"-----------------")
+                    final_results_logger.info(f"-----------------")
+                    final_results_logger.info(f"-----------------")
                     continue
         elif train_end_date_dt.weekday() == 6:
             try:
@@ -209,17 +229,17 @@ for i in mondays:
                 except TypeError:
                     # if neither Monday nor Tuesday is a true date in my data
                     # raise TypeError("when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a true date in my data")
-                    logging.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a \
+                    final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_start_date_dt\" neither next Monday nor Tuesday is a \
                         true date in my data: train_start_date_dt: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
-                    logging.info(f"-----------------")
-                    logging.info(f"-----------------")
+                    final_results_logger.info(f"-----------------")
+                    final_results_logger.info(f"-----------------")
                     continue
         else:
             raise TypeError("when selecting \"test_start_date_dt\" the \"train_end_date_ dt\" is neither Saturday nor Sunday")
-            logging.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_start_date_dt\" the \"train_end_date_dt\" is neither \
+            final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_start_date_dt\" the \"train_end_date_dt\" is neither \
                 Saturday nor Sunday: train_start_date_dt: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
-            logging.info(f"-----------------")
-            logging.info(f"-----------------")
+            final_results_logger.info(f"-----------------")
+            final_results_logger.info(f"-----------------")
             continue
         ## Assign test_end_date_dt
         try:
@@ -236,121 +256,146 @@ for i in mondays:
                 #     test_end_index_num = int(np.where(unique_date_index == test_start_date_dt + one_week_dt - dt.timedelta(days=2))[0])
                 #     test_end_date_dt = unique_date_index[test_end_index_num] #next business day
                 # except TypeError:
-                logging.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_end_date_dt\" neither Friday nor \
+                final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: when selecting \"test_end_date_dt\" neither Friday nor \
                     Thursday exist or \"test_end_date_dt\" is a Tuesday and Friday doesn't exist: \
                     test_start_date_dt: {test_start_date_dt}")
-                logging.info(f"-----------------")
-                logging.info(f"-----------------")
+                final_results_logger.info(f"-----------------")
+                final_results_logger.info(f"-----------------")
                 continue
         # if (test_end_date_dt - test_start_date_dt) < (one_week_dt - dt.timedelta(days=4)) or \
         #     (test_end_date_dt - test_start_date_dt) > (one_week_dt + dt.timedelta(days=1)):
-        #     logging.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - test_start_date_dt) is less than dt.timedelta(days=10): \
+        #     final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - test_start_date_dt) is less than dt.timedelta(days=10): \
         #         train_start_date_dt: train_start_date_dt: {train_start_date_dt} - test_start_date_dt: {test_start_date_dt}")
-        #     logging.info(f"-----------------")
-        #     logging.info(f"-----------------")
+        #     final_results_logger.info(f"-----------------")
+        #     final_results_logger.info(f"-----------------")
         #     continue
 
-        # TODO: test_start_date_dt should be a Saturday
-        # TODO: Why is test_start_date_dt and test_start_date_dt not being used?
-
+        
+        ## Filter for relevant trading period
+        # analyzed_df = df[trading_date]
+        analyzed_df = df.loc[train_start_date_dt:train_end_date_dt,:].copy()
+        
+        
         ## Parameters
-        trade_size = 20000
+        # trade_size = 20000
         # trading_date = "2018-03"
 
         # For resampling
-        frequency = 15
+        # frequency = 15
         
-        filter_days = []
-        filter_hours = range(8,20) # UTC timezone
-        filter_mins = []
-        filter_secs = []
+        # filter_days = []
+        # filter_hours = range(8,20) # UTC timezone
+        # filter_mins = []
+        # filter_secs = []
 
 
         # For assigning factors
-        num_of_std_dev = 3
-        lookback = 20 # Days
+        # num_of_std_dev = 3
+        # lookback = 20 # Days
         
 
         # For calculating factors
-        stop_loss_buffer = 0.0010
-        take_profit_buffer = 0.0010
+        # stop_loss_buffer = 0.0010
+        # take_profit_buffer = 0.0010
 
 
         ## Parameter Grid
-        params = {"frequency":15, # For resampling
+        params = {"trade_size":20000,
+                "frequency":15, # For resampling
                 "filter_hours":range(8,20), # For selecting most suitable tme of day to trade
                 "num_of_std_dev":3, # For assigning factors
                 "lookback":20, # For assigning factors
                 "stop_loss_buffer":0.0010, # For calculating factors
                 "take_profit_buffer":0.0010} # For calculating factors
         
-        # ParameterGrid({})
+        tested_params = {}
+
+        for param ParameterGrid(params):
+            trade_size = param["trade_size"]
+            frequency = param["frequency"]
+            filter_hours = param["filter_hours"]
+            num_of_std_dev = param["num_of_std_dev"]
+            lookback = param["lookback"]
+            stop_loss_buffer = param["stop_loss_buffer"]
+            take_profit_buffer = param["take_profit_buffer"]
 
 
-        ## Filter for relevant trading period
-        # analyzed_df = df[trading_date]
-        analyzed_df = df.loc[train_start_date_dt:train_end_date_dt,:].copy()
+            ## Resampling into 1 Minute bars
+            resample_interval = f"{frequency}T"
+            min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
 
 
-        ## Resampling into 1 Minute bars
-        resample_interval = f"{frequency}T"
-        min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
+            ## Assign factors
+            index_frequency = pd.Timedelta(minutes=frequency)
+            min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
 
 
-        ## Assign factors
-        index_frequency = pd.Timedelta(minutes=frequency)
-        min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
+            ## Dropping N.As
+            min_1_analyzed_df = drop_na(min_1_analyzed_df)
 
 
-        ## Dropping N.As
-        min_1_analyzed_df = drop_na(min_1_analyzed_df)
+            ## Include only certain times of the day
+            min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
 
 
-        ## Include only certain times of the day
-        min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
+            ## Including "Period Number"
+            min_1_analyzed_df = include_period_num(min_1_analyzed_df)
 
 
-        ## Including "Period Number"
-        min_1_analyzed_df = include_period_num(min_1_analyzed_df)
+            ## Calculating Factor's Values
+            min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
+                                                                num_of_std_dev, 
+                                                                stop_loss_buffer, 
+                                                                take_profit_buffer)
 
 
-        ## Calculating Factor's Values
-        min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
-                                                            num_of_std_dev, 
-                                                            stop_loss_buffer, 
-                                                            take_profit_buffer)
+            ## Calculating Factor's Profit and Loss
+            min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
+                                                                                                        trade_size)
 
 
-        ## Calculating Factor's Profit and Loss
-        min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
-                                                                                                    trade_size)
+            ## P&L time distribution profit and loss charts
+            P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
+                , train_end_date_dt.strftime(format="%Y%m%d"))
 
-
-        ## P&L time distribution profit and loss charts
-        P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
-            , train_end_date_dt.strftime(format="%Y%m%d"))
-
-
-        ## Result (P & L)
-        num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
-            commission, slippage, net_absolute_profit_loss, \
-            net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
-                train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
+            ## Result (P & L)
+            num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+                commission, slippage, net_absolute_profit_loss, \
+                net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
+                    train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
         
-        logging.info(f"Train Dates: {train_start_date_dt, train_end_date_dt}")
-        logging.info(f"Test Dates: {test_start_date_dt, test_end_date_dt}")
-        logging.info(f"Parameters: {frequency, filter_hours, num_of_std_dev, lookback, stop_loss_buffer, take_profit_buffer}")
-        logging.info(f"-----RESULTS-----")
-        logging.info(f"Profit and loss: {P_N_L_Stats}")
-        logging.info(f"Number of trades: {num_of_trades}")
-        logging.info(f"Gross absolute profit/loss: {gross_absolute_profit_loss}")
-        logging.info(f"Gross % profit/loss: {gross_percent_profit_loss}")
-        logging.info(f"Commission: {commission}")
-        logging.info(f"Slippage: {slippage}")
-        logging.info(f"Net absolute profit/loss: {net_absolute_profit_loss}")
-        logging.info(f"Net % profit/loss: {net_percent_profit_loss}")
-        logging.info(f"-----------------")
-        logging.info(f"-----------------")
 
-logging.shutdown()
+            param_search_logger.info(f"{{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt}, \"Test End Date\": \
+                {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \"filter_hours\":{filter_hours}, \
+                \"num_of_std_dev\":{num_of_std_dev}, \"lookback\":{lookback}, \"stop_loss_buffer\":{stop_loss_buffer}, \"take_profit_buffer\":{take_profit_buffer}}} \
+                | {{\"Number of trades\":{num_of_trades}, \"Gross absolute profit/loss\":{gross_absolute_profit_loss}, \"Gross per cent profit/loss\":{gross_percent_profit_loss}, \
+                    \"Commission\":{commission}, \"Slippage\":{slippage}, \"Net absolute profit/loss\":{net_absolute_profit_loss}, \"Net % profit/loss\":{net_percent_profit_loss}}}")
+
+            ## Log parameteres used in training + net profit
+            tested_params[str(param)] = net_percent_profit_loss
+
+
+        ## Best parameters combination per training period
+        best_params = max(tested_params, key=tested_params.get)
+
+        # TODO
+        ### run best model against test period
+
+        
+        final_results_logger.info(f"Train Dates: {train_start_date_dt, train_end_date_dt}")
+        final_results_logger.info(f"Test Dates: {test_start_date_dt, test_end_date_dt}")
+        final_results_logger.info(f"Parameters: {frequency, filter_hours, num_of_std_dev, lookback, stop_loss_buffer, take_profit_buffer}")
+        final_results_logger.info(f"-----RESULTS-----")
+        final_results_logger.info(f"Profit and loss: {P_N_L_Stats}")
+        final_results_logger.info(f"Number of trades: {num_of_trades}")
+        final_results_logger.info(f"Gross absolute profit/loss: {gross_absolute_profit_loss}")
+        final_results_logger.info(f"Gross % profit/loss: {gross_percent_profit_loss}")
+        final_results_logger.info(f"Commission: {commission}")
+        final_results_logger.info(f"Slippage: {slippage}")
+        final_results_logger.info(f"Net absolute profit/loss: {net_absolute_profit_loss}")
+        final_results_logger.info(f"Net % profit/loss: {net_percent_profit_loss}")
+        final_results_logger.info(f"-----------------")
+        final_results_logger.info(f"-----------------")
+
+final_results_logger.shutdown()
 
