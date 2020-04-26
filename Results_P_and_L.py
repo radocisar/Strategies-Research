@@ -33,12 +33,12 @@ def results_P_and_L(min_1_analyzed_df, trade_size, train_start_date_str, train_e
     # P_N_L_Stats = pd.DataFrame({"Count":profit_vs_loss.value_counts(ascending=True).values,"Average":[s[s>0].mean(),
     # s[s<0].mean()]},index=profit_vs_loss.value_counts().index)
 
-    print("# of Trades: {}".format(num_of_trades))
-    print(P_N_L_Stats)
-    print("Gross P&L: {} ({}%)".format(gross_absolute_profit_loss,gross_percent_profit_loss))
-    print("Commission: {}".format(commission))
-    print("Slippage: {}".format(slippage))
-    print("Net P&L: {} ({}%)".format(net_absolute_profit_loss,net_percent_profit_loss))
+    # print("# of Trades: {}".format(num_of_trades))
+    # print(P_N_L_Stats)
+    # print("Gross P&L: {} ({}%)".format(gross_absolute_profit_loss,gross_percent_profit_loss))
+    # print("Commission: {}".format(commission))
+    # print("Slippage: {}".format(slippage))
+    # print("Net P&L: {} ({}%)".format(net_absolute_profit_loss,net_percent_profit_loss))
 
     # Charting P&L:
     pnl_chart_df = min_1_analyzed_df["Trade_Prft_Lss"].replace(0,np.NaN)
