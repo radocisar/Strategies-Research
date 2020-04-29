@@ -137,7 +137,21 @@ try:
         
         plt.savefig(f"./Charts/Loss_{train_start_date_str}_{train_end_date_str}.png")
         plt.close(fig=fig)
-        
+
+    def best_params_string_to_dict(s):
+        d = {}
+        l = ['filter_hours', 'frequency', 'lookback', 'num_of_std_dev', 'stop_loss_buffer', 'take_profit_buffer']
+        for key, item in zip(l, s.split(":")[1:]):
+            i = item[1:item.rfind(",")]
+            if "range" in i:
+                start_hour, end_hour = i.replace("range(","").replace(")","").split(",")
+                d[key] = range(int(start_hour), int(end_hour))
+            elif "." in i:
+                d[key] = float(i)
+            else:
+                d[key] = int(i)
+
+        return d
 
 
 
@@ -165,7 +179,7 @@ try:
     last_friday_dt = df.drop_duplicates("weekday",keep="last").loc[df["weekday"] == 4,:].index[0].date()
     mondays = np.unique(df.loc[df["weekday"]==0,"weekday"].index.date)
     #n = 1 # increment by week
-    for i in tqdm(mondays, leave=False):
+    for i in tqdm(mondays, leave=False, desc="Traiding Period Loop"):
         if (i + three_weeks_dt + one_week_dt + dt.timedelta(days=2)) <= last_friday_dt:
             ## Assign train_start_date_dt
             # 19 days for training
@@ -308,16 +322,16 @@ try:
             "take_profit_buffer" - For calculating factors
             """
             params = {
-                "frequency":[5, 10, 15, 20],
-                "filter_hours":[range(7,20), range(8,20), range(8,22)],
-                "num_of_std_dev":[2, 2.5, 3, 3.5],
-                "lookback":[10, 20, 30],
-                "stop_loss_buffer":[0.0005, 0.0010, 0.0015],
-                "take_profit_buffer":[0.0005, 0.0010, 0.0015]}
+                "frequency":[5, 10], #, 15, 20],
+                "filter_hours":[range(7,20), range(8,20)], #, range(8,22)],
+                "num_of_std_dev":[2, 2.5], #, 3, 3.5],
+                "lookback":[10, 20], #, 30],
+                "stop_loss_buffer":[0.0005, 0.0010], #, 0.0015],
+                "take_profit_buffer":[0.0005, 0.0010]} #, 0.0015]}
             # "trade_size":20000,
             tested_params = {}
 
-            for param in ParameterGrid(params):
+            for param in tqdm(ParameterGrid(params), leave=False, desc="Parameters Search"):
                 trade_size = 20000 # param["trade_size"]
                 frequency = param["frequency"]
                 filter_hours = param["filter_hours"]
@@ -374,11 +388,12 @@ try:
 
 
             ## Best parameters combination per training period
-            best_params = max(tested_params, key=tested_params.get)
+            best_params_str = max(tested_params, key=tested_params.get)
+            best_params = best_params_string_to_dict(best_params_str)
 
             ## Testing run
             ### run best model against test period
-            trade_size = best_params["trade_size"]
+            trade_size = 20000
             frequency = best_params["frequency"]
             filter_hours = best_params["filter_hours"]
             num_of_std_dev = param["num_of_std_dev"]
@@ -386,7 +401,7 @@ try:
             stop_loss_buffer = best_params["stop_loss_buffer"]
             take_profit_buffer = best_params["take_profit_buffer"]
 
-            ## Resampling into 1 Minute brs
+            ## Resampling into 1 Minute bars
             resample_interval = f"{frequency}T"
             min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
 
