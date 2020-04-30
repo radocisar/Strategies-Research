@@ -19,6 +19,8 @@ import Results_P_and_L
 import logging
 from tqdm import tqdm
 
+matplotlib.use('Agg')
+
 param_search_logger = logging.getLogger("param_search_logger")
 param_search_logger.setLevel(logging.INFO)
 param_search_handler = logging.FileHandler(filename='param_search_log.log')
