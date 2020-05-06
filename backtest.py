@@ -137,7 +137,12 @@ try:
         # plt.xaxis_date()
         ax2.autoscale_view()
         
-        plt.savefig(f"./Charts/Loss_{train_start_date_str}_{train_end_date_str}.png")
+        # Adjusting train_end_date_conv_str to be Friday instead of Saturday
+        train_end_date_date = dt.datetime.strptime(train_end_date_str, "%Y%m%d")
+        train_end_date_conv_str = train_end_date_date - dt.timedelta(days=1)
+        train_end_date_conv_str = dt.datetime.strftime(train_end_date_conv_str, "%Y%m%d")
+        
+        plt.savefig(f"./Charts/Loss_{train_start_date_str}_{train_end_date_conv_str}.png")
         plt.close(fig=fig)
 
     def best_params_string_to_dict(s):
@@ -385,7 +390,7 @@ try:
                 {{\"Number of trades\":{num_of_trades}, \"Gross absolute profit/loss\":{gross_absolute_profit_loss}, \"Gross per cent profit/loss\":{gross_percent_profit_loss},\
                 \"Commission\":{commission}, \"Slippage\":{slippage}, \"Net absolute profit/loss\":{net_absolute_profit_loss}, \"Net % profit/loss\":{net_percent_profit_loss}}}")
 
-                ## Log parameteres used in training + net profit
+                ## Log parameteres used in training + net profit %
                 tested_params[str(param)] = net_percent_profit_loss
 
 
@@ -398,10 +403,13 @@ try:
             trade_size = 20000
             frequency = best_params["frequency"]
             filter_hours = best_params["filter_hours"]
-            num_of_std_dev = param["num_of_std_dev"]
+            num_of_std_dev = best_params["num_of_std_dev"]
             lookback = best_params["lookback"]
             stop_loss_buffer = best_params["stop_loss_buffer"]
             take_profit_buffer = best_params["take_profit_buffer"]
+
+            ## Filter for relevant testing period
+            analyzed_df = df.loc[test_start_date_dt:test_end_date_dt,:].copy()
 
             ## Resampling into 1 Minute bars
             resample_interval = f"{frequency}T"

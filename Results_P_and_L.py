@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import datetime as dt
 
 def results_P_and_L(min_1_analyzed_df, trade_size, train_start_date_str, train_end_date_str):
     # Gross P&L:
@@ -58,7 +59,13 @@ def results_P_and_L(min_1_analyzed_df, trade_size, train_start_date_str, train_e
     ax4.autoscale_view()
     ax5.xaxis_date()
     ax5.autoscale_view()
-    plt.savefig(f"./Charts/P_and_L_{train_start_date_str}_{train_end_date_str}.png")
+
+    # Adjusting train_end_date_conv_str to be Friday instead of Saturday
+    train_end_date_date = dt.datetime.strptime(train_end_date_str, "%Y%m%d")
+    train_end_date_conv_str = train_end_date_date - dt.timedelta(days=1)
+    train_end_date_conv_str = dt.datetime.strftime(train_end_date_conv_str, "%Y%m%d")
+
+    plt.savefig(f"./Charts/P_and_L_{train_start_date_str}_{train_end_date_conv_str}.png")
     plt.close(fig=fig1)
     # ax2 = plt.subplot(3,1,1)
     # min_1_analyzed_df["SMA10"].head(100).plot(ax=ax1, color="r")
