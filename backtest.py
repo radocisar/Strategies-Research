@@ -101,18 +101,22 @@ try:
         return min_1_analyzed_df
 
     def include_period_num(min_1_analyzed_df):
-        min_1_analyzed_df["Period_Number"] = range(0,min_1_analyzed_df.shape[0])
+        min_1_analyzed_df.loc[:,"Period_Number"] = range(0,min_1_analyzed_df.shape[0])
         return min_1_analyzed_df
 
     ## P&L time distribution
     def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_str, train_end_date_str):
         min_1_analyzed_df_dist_analysis.loc[:,"Trade_Entry_Time"] = min_1_analyzed_df_dist_analysis.index
+        # min_1_analyzed_df_dist_analysis["Trade_Entry_Time"] = min_1_analyzed_df_dist_analysis.index
         min_1_analyzed_df_dist_analysis.loc[:,"Trade_Entry_Time_Shifted"] = min_1_analyzed_df_dist_analysis["Trade_Entry_Time"].shift(1)
+        # min_1_analyzed_df_dist_analysis["Trade_Entry_Time_Shifted"] = min_1_analyzed_df_dist_analysis["Trade_Entry_Time"].shift(1)
         min_1_analyzed_df_dist_analysis.drop("Trade_Entry_Time",axis=1, inplace=True)
         min_1_analyzed_df_dist_analysis_exists_only = min_1_analyzed_df_dist_analysis.loc[((min_1_analyzed_df_dist_analysis \
-        ["Action"] == "Took Profit") | (min_1_analyzed_df_dist_analysis["Action"] == "Stopped Out")),:]
+        ["Action"] == "Took Profit") | (min_1_analyzed_df_dist_analysis["Action"] == "Stopped Out")),:].copy()
         min_1_analyzed_df_dist_analysis_exists_only.loc[:,"Hour_of_Entry"] = min_1_analyzed_df_dist_analysis_exists_only \
-        ["Trade_Entry_Time_Shifted"].apply(lambda x: x.hour)
+        ["Trade_Entry_Time_Shifted"].apply(lambda x: x.hour).copy()
+        # min_1_analyzed_df_dist_analysis_exists_only["Hour_of_Entry"] = min_1_analyzed_df_dist_analysis_exists_only \
+        # ["Trade_Entry_Time_Shifted"].apply(lambda x: x.hour)
 
         fig = plt.figure(figsize=(10,10))
         ax1 = fig.add_subplot(2,1,1)
@@ -329,12 +333,12 @@ try:
             "take_profit_buffer" - For calculating factors
             """
             params = {
-                "frequency":[5, 10], #, 15, 20],
-                "filter_hours":[range(7,20), range(8,20)], #, range(8,22)],
-                "num_of_std_dev":[2, 2.5], #, 3, 3.5],
-                "lookback":[10, 20], #, 30],
-                "stop_loss_buffer":[0.0005, 0.0010], #, 0.0015],
-                "take_profit_buffer":[0.0005, 0.0010]} #, 0.0015]}
+                "frequency":[5, 10, 15, 20],
+                "filter_hours":[range(7,20), range(8,20), range(8,22)],
+                "num_of_std_dev":[2, 2.5, 3, 3.5],
+                "lookback":[10, 15, 20, 25, 30],
+                "stop_loss_buffer":[0.0005, 0.0010, 0.0015],
+                "take_profit_buffer":[0.0005, 0.0010, 0.0015]}
             # "trade_size":20000,
             tested_params = {}
 

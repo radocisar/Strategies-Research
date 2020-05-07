@@ -100,6 +100,6 @@ def calc_profit_loss(min_1_analyzed_df, trade_size):
     #         return np.nan
 
     min_1_analyzed_df["Trade_Prft_Lss"] = min_1_analyzed_df["Trade_Prc_and_Prft"].apply(lambda x: x[1])
-    min_1_analyzed_df_dist_analysis = min_1_analyzed_df[min_1_analyzed_df["Action"] != "Waiting"]
+    min_1_analyzed_df_dist_analysis = min_1_analyzed_df[min_1_analyzed_df["Action"] != "Waiting"].copy()
 
     return min_1_analyzed_df, min_1_analyzed_df_dist_analysis
