@@ -333,12 +333,12 @@ try:
             "take_profit_buffer" - For calculating factors
             """
             params = {
-                "frequency":[5, 10, 15, 20],
-                "filter_hours":[range(7,20), range(8,20), range(8,22)],
-                "num_of_std_dev":[2, 2.5, 3, 3.5],
-                "lookback":[10, 15, 20, 25, 30],
-                "stop_loss_buffer":[0.0005, 0.0010, 0.0015],
-                "take_profit_buffer":[0.0005, 0.0010, 0.0015]}
+                "frequency":[15, 20], #[5, 10, 15, 20],
+                "filter_hours":[range(8,20), range(8,22)], #[range(7,20), range(8,20), range(8,22)],
+                "num_of_std_dev":[3, 3.5], #[2, 2.5, 3],
+                "lookback":[25, 30], #[10, 15, 20, 25, 30],
+                "stop_loss_buffer":[0.0005, 0.0010], #, 0.0015],
+                "take_profit_buffer":[0.0005, 0.0010]} #, 0.0015]}
             # "trade_size":20000,
             tested_params = {}
 
@@ -377,6 +377,10 @@ try:
                 ## Calculating Factor's Profit and Loss
                 min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
                                                                                                             trade_size)
+
+                ## Only proceed if there is has been at least one trade
+                if min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].shape[0] <= 0:
+                    continue
 
                 ## P&L time distribution profit and loss charts
                 P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
