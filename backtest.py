@@ -333,10 +333,10 @@ try:
             "take_profit_buffer" - For calculating factors
             """
             params = {
-                "frequency":[15, 20, 5, 10, 15, 20],
-                "filter_hours":[range(8,20), range(8,22), range(7,20), range(8,20), range(8,22)],
-                "num_of_std_dev":[3, 3.5, 2, 2.5, 3],
-                "lookback":[25, 30, 10, 15, 20, 25, 30],
+                "frequency":[5, 10, 15, 20],
+                "filter_hours":[range(8,20), range(8,22), range(7,20)],
+                "num_of_std_dev":[3, 3.5, 2, 2.5],
+                "lookback":[10, 15, 20, 25, 30],
                 "stop_loss_buffer":[0.0005, 0.0010, 0.0015],
                 "take_profit_buffer":[0.0005, 0.0010, 0.0015]}
             # "trade_size":20000,
@@ -346,6 +346,7 @@ try:
                 trade_size = 20000 # param["trade_size"]
                 frequency = param["frequency"]
                 filter_hours = param["filter_hours"]
+
                 num_of_std_dev = param["num_of_std_dev"]
                 lookback = param["lookback"]
                 stop_loss_buffer = param["stop_loss_buffer"]
