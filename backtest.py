@@ -23,12 +23,12 @@ matplotlib.use('Agg')
 
 param_search_logger = logging.getLogger("param_search_logger")
 param_search_logger.setLevel(logging.INFO)
-param_search_handler = logging.FileHandler(filename='param_search_log.log')
+param_search_handler = logging.FileHandler(filename='./Logs/param_search_log.log')
 param_search_handler.setLevel(logging.INFO)
 
 final_results_logger = logging.getLogger("final_results_logger")
 final_results_logger.setLevel(logging.INFO)
-final_results_handler = logging.FileHandler(filename='final_results_log.log')
+final_results_handler = logging.FileHandler(filename='./Logs/final_results_log.log')
 final_results_handler.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s | %(message)s')
@@ -333,12 +333,12 @@ try:
             "take_profit_buffer" - For calculating factors
             """
             params = {
-                "frequency":[15, 20], #[5, 10, 15, 20],
-                "filter_hours":[range(8,20), range(8,22)], #[range(7,20), range(8,20), range(8,22)],
-                "num_of_std_dev":[3, 3.5], #[2, 2.5, 3],
-                "lookback":[25, 30], #[10, 15, 20, 25, 30],
-                "stop_loss_buffer":[0.0005, 0.0010], #, 0.0015],
-                "take_profit_buffer":[0.0005, 0.0010]} #, 0.0015]}
+                "frequency":[15, 20, 5, 10, 15, 20],
+                "filter_hours":[range(8,20), range(8,22), range(7,20), range(8,20), range(8,22)],
+                "num_of_std_dev":[3, 3.5, 2, 2.5, 3],
+                "lookback":[25, 30, 10, 15, 20, 25, 30],
+                "stop_loss_buffer":[0.0005, 0.0010, 0.0015],
+                "take_profit_buffer":[0.0005, 0.0010, 0.0015]}
             # "trade_size":20000,
             tested_params = {}
 
@@ -445,6 +445,10 @@ try:
             ## Calculating Factor's Profit and Loss
             min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
                                                                                                         trade_size)
+
+            ## Only proceed if there is has been at least one trade
+            if min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].shape[0] <= 0:
+                continue
 
             ## Result (P & L)
             num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
