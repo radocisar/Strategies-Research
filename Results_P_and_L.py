@@ -5,32 +5,34 @@ import matplotlib.pyplot as plt
 import datetime as dt
 
 def results_P_and_L(min_1_analyzed_df, trade_size, train_start_date_str, train_end_date_str):
+    trades = min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"]
+    
     # Gross P&L:
-    gross_absolute_profit_loss = min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].sum()
+    gross_absolute_profit_loss = trades.sum()
     gross_percent_profit_loss = (gross_absolute_profit_loss/trade_size)*100
-
+    trade_count = trades.count()
     # Commission:
-    commission = min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].count()*2
+    commission = trade_count*2
 
     #Slippage:
-    slippage = min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].count()*(trade_size/10000)
+    slippage = trade_count*(trade_size/10000)
 
     # Net P&L:
     net_absolute_profit_loss = gross_absolute_profit_loss - commission - slippage
     net_percent_profit_loss = (net_absolute_profit_loss/trade_size)*100
 
     # Number of trades:
-    num_of_trades = min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].count()
+    num_of_trades = trade_count
 
     # Print table
-    profit_vs_loss = min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"] > 0
+    profit_vs_loss = trades > 0
     profit_vs_loss.replace({True:"Profit",False:"Loss"}, inplace=True)
-    s = min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"]
-    pft_df = pd.concat([profit_vs_loss,s], axis=1)
+    
+    pft_df = pd.concat([profit_vs_loss,trades], axis=1)
     pft_df.columns = ["Trade_Prft_Lss_Name","Trade_Prft_Lss_Value"]
-    P_N_L_Stats = pft_df.groupby(["Trade_Prft_Lss_Name"],sort=False).describe()
-    P_N_L_Stats.rename(columns={"Trade_Prft_Lss_Value":""},level=0,inplace=True)
-    P_N_L_Stats.index.name = None
+    # P_N_L_Stats = pft_df.groupby(["Trade_Prft_Lss_Name"],sort=False).describe()
+    # P_N_L_Stats.rename(columns={"Trade_Prft_Lss_Value":""},level=0,inplace=True)
+    # P_N_L_Stats.index.name = None
     # P_N_L_Stats = pd.DataFrame({"Count":profit_vs_loss.value_counts(ascending=True).values,"Average":[s[s>0].mean(),
     # s[s<0].mean()]},index=profit_vs_loss.value_counts().index)
 
@@ -72,5 +74,7 @@ def results_P_and_L(min_1_analyzed_df, trade_size, train_start_date_str, train_e
     # ax3 = plt.subplot(3,1,1)
     # min_1_analyzed_df["SMA20"].head(100).plot(ax=ax1, color="y")
 
-    return num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+    # return num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+    #     commission, slippage, net_absolute_profit_loss, net_percent_profit_loss
+    return num_of_trades, gross_absolute_profit_loss, gross_percent_profit_loss, \
         commission, slippage, net_absolute_profit_loss, net_percent_profit_loss

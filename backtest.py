@@ -63,18 +63,16 @@ try:
         (min_1_analyzed_df["Close"].rolling(lookback).std()*num_of_std_dev)
         min_1_analyzed_df["Lower_Band"] = min_1_analyzed_df["Middle_Band"] - \
         (min_1_analyzed_df["Close"].rolling(lookback).std()*num_of_std_dev)
-        min_1_analyzed_df["Prev_Lower_Band"] = min_1_analyzed_df["Lower_Band"].shift(1)
-        min_1_analyzed_df["Prev_Upper_Band"] = min_1_analyzed_df["Upper_Band"].shift(1)
+        # min_1_analyzed_df["Prev_Lower_Band"] = min_1_analyzed_df["Lower_Band"].shift(1)
+        # min_1_analyzed_df["Prev_Upper_Band"] = min_1_analyzed_df["Upper_Band"].shift(1)
         min_1_analyzed_df["Upper_Lower_Band_Span"] = min_1_analyzed_df["Upper_Band"] - min_1_analyzed_df["Lower_Band"]
         min_1_analyzed_df["Candle_High_and_Close_above_U_Band"] = min_1_analyzed_df["Close"] > min_1_analyzed_df["Upper_Band"]
         min_1_analyzed_df["Prev_Candle_High_and_Close_above_U_Band"] = min_1_analyzed_df["Candle_High_and_Close_above_U_Band"].shift(1)
-        min_1_analyzed_df.drop("Candle_High_and_Close_above_U_Band",axis=1,inplace=True)
         min_1_analyzed_df["Candle_Low_and_Close_below_L_Band"] = min_1_analyzed_df["Close"] < min_1_analyzed_df["Lower_Band"]
         min_1_analyzed_df["Prev_Candle_Low_and_Close_below_L_Band"] = min_1_analyzed_df["Candle_Low_and_Close_below_L_Band"].shift(1)
-        min_1_analyzed_df.drop("Candle_Low_and_Close_below_L_Band",axis=1,inplace=True)
         #min_1_analyzed_df["Is_Prev_Cndl_Up"] = ((min_1_analyzed_df["Close"].shift(1) - min_1_analyzed_df["Open"].shift(1)) >= 0)
         #min_1_analyzed_df["Is_Prev_Cndl_Down"] = ((min_1_analyzed_df["Close"].shift(1) - min_1_analyzed_df["Open"].shift(1)) < 0)
-        min_1_analyzed_df["Five_per_std"] = min_1_analyzed_df["Close"].rolling(5).std()
+        # min_1_analyzed_df["Five_per_std"] = min_1_analyzed_df["Close"].rolling(5).std()
         min_1_analyzed_df["Prev_High"] = min_1_analyzed_df["High"].shift(1)
         min_1_analyzed_df["Prev_Low"] = min_1_analyzed_df["Low"].shift(1)
 
@@ -89,21 +87,27 @@ try:
                 return np.nan
 
         min_1_analyzed_df["Dict_of_Closing_Prices"] = min_1_analyzed_df_temp.apply(Dict_of_Closing_Prices_Creation, axis=1)    
+        
+        # Cleanup of unused columns and variables to save memory
+        min_1_analyzed_df.drop(["DateTime_UTC_column", \
+            "Candle_High_and_Close_above_U_Band", \
+                "Candle_Low_and_Close_below_L_Band"], axis="columns", inplace=True)
+        # del Dict_of_Closing_Prices
 
         return min_1_analyzed_df
 
 
-    def drop_na(min_1_analyzed_df):
-        min_1_analyzed_df.dropna(inplace=True)
-        return min_1_analyzed_df
+    # def drop_na(min_1_analyzed_df):
+    #     min_1_analyzed_df.dropna(inplace=True)
+    #     return min_1_analyzed_df
 
-    def filter_certain_hours(min_1_analyzed_df, filter_hours):
-        min_1_analyzed_df = min_1_analyzed_df[min_1_analyzed_df.index.hour.isin(filter_hours)]
-        return min_1_analyzed_df
+    # def filter_certain_hours(min_1_analyzed_df, filter_hours):
+    #     min_1_analyzed_df = min_1_analyzed_df[min_1_analyzed_df.index.hour.isin(filter_hours)]
+    #     return min_1_analyzed_df
 
-    def include_period_num(min_1_analyzed_df):
-        min_1_analyzed_df.loc[:,"Period_Number"] = range(0,min_1_analyzed_df.shape[0])
-        return min_1_analyzed_df
+    # def include_period_num(min_1_analyzed_df):
+    #     min_1_analyzed_df.loc[:,"Period_Number"] = range(0,min_1_analyzed_df.shape[0])
+    #     return min_1_analyzed_df
 
     ## P&L time distribution
     def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_str, train_end_date_str):
@@ -293,14 +297,12 @@ try:
             #         train_start_date_dt: train_start_date_dt: {train_start_date_dt} - test_start_date_dt: {test_start_date_dt}")
             #     final_results_logger.info(f"-----------------")
             #     final_results_logger.info(f"-----------------")
-            #     continue
+            #     continue            
 
-            
             ## Filter for relevant trading period
             # analyzed_df = df[trading_date]
             analyzed_df = df.loc[train_start_date_dt:train_end_date_dt,:].copy()
-            
-            
+                    
             ## Parameters
             # trade_size = 20000
             # trading_date = "2018-03"
@@ -334,17 +336,18 @@ try:
             "take_profit_buffer" - For calculating factors
             """
             params = {
-                "frequency":[5, 10, 15, 20],
-                "filter_hours":[range(8,20), range(8,22), range(7,20)],
-                "num_of_std_dev":[2, 2.5, 3, 3.5],
-                "lookback":[10, 15, 20, 25, 30],
-                "stop_loss_buffer":[0.0005, 0.0010, 0.0015],
-                "take_profit_buffer":[0.0005, 0.0010, 0.0015]}
+                "frequency":[15, 20], #[5, 10, 15, 20],
+                "filter_hours":[range(8,20), range(7,20)], #[range(8,20), range(8,22), range(7,20)],
+                "num_of_std_dev":[2, 2.5], #[2, 2.5, 3, 3.5],
+                "lookback":[10, 15], #[10, 15, 20, 25, 30],
+                "stop_loss_buffer":[0.0005, 0.0010], #[0.0005, 0.0010, 0.0015],
+                "take_profit_buffer":[0.0005, 0.0010]} #[0.0005, 0.0010, 0.0015]}
             # "trade_size":20000,
             tested_params = {}
 
             # for param in tqdm(ParameterGrid(params), leave=False, desc="Parameters Search"):
             def params_train_processing(param):
+                pbar.update(1)
                 try:
                     trade_size = 20000 # param["trade_size"]
                     frequency = param["frequency"]
@@ -363,13 +366,16 @@ try:
                     min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
 
                     ## Dropping N.As
-                    min_1_analyzed_df = drop_na(min_1_analyzed_df)
+                    # min_1_analyzed_df = drop_na(min_1_analyzed_df)
+                    min_1_analyzed_df.dropna(inplace=True)
 
                     ## Include only certain times of the day
-                    min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
+                    # min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
+                    min_1_analyzed_df = min_1_analyzed_df[min_1_analyzed_df.index.hour.isin(filter_hours)]
 
                     ## Including "Period Number"
-                    min_1_analyzed_df = include_period_num(min_1_analyzed_df)
+                    # min_1_analyzed_df = include_period_num(min_1_analyzed_df)
+                    min_1_analyzed_df.loc[:,"Period_Number"] = range(0,min_1_analyzed_df.shape[0])
 
                     ## Calculating Factor's Values
                     min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
@@ -386,15 +392,22 @@ try:
                         # continue
 
                     ## P&L time distribution profit and loss charts
-                    P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
-                        , train_end_date_dt.strftime(format="%Y%m%d"))
+                    # P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
+                    #     , train_end_date_dt.strftime(format="%Y%m%d"))
+                    del min_1_analyzed_df_dist_analysis
 
                     ## Result (P & L)
-                    num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+                    # num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+                    #     commission, slippage, net_absolute_profit_loss, \
+                    #     net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
+                    #         train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
+                    num_of_trades, gross_absolute_profit_loss, gross_percent_profit_loss, \
                         commission, slippage, net_absolute_profit_loss, \
                         net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
                             train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
-                
+
+                    del min_1_analyzed_df
+
                     param_search_logger.info(f"{{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt},\
                     \"Test End Date\": {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \"filter_hours\":{filter_hours},\
                     \"num_of_std_dev\":{num_of_std_dev}, \"lookback\":{lookback}, \"stop_loss_buffer\":{stop_loss_buffer}, \"take_profit_buffer\":{take_profit_buffer}}} | \
@@ -410,7 +423,8 @@ try:
                     pass
 
             ## Run params_train_processing in parallel on all processors
-            with Pool(processes=os.cpu_count()) as pool:
+            with Pool(processes=os.cpu_count()-10) as pool:
+                pbar = tqdm(total = 1440)
                 tested_params_results = pool.map(params_train_processing, list(ParameterGrid(params)))
             
             ## Log parameteres used in training + net profit %
@@ -437,20 +451,24 @@ try:
             ## Resampling into 1 Minute bars
             resample_interval = f"{frequency}T"
             min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
+            del analyzed_df
 
             ## Assign factors
             index_frequency = pd.Timedelta(minutes=frequency)
             min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
 
             ## Dropping N.As
-            min_1_analyzed_df = drop_na(min_1_analyzed_df)
+            # min_1_analyzed_df = drop_na(min_1_analyzed_df)
+            min_1_analyzed_df.dropna(inplace=True)
 
             ## Include only certain times of the day
-            min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
+            # min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
+            min_1_analyzed_df = min_1_analyzed_df[min_1_analyzed_df.index.hour.isin(filter_hours)]            
 
             ## Including "Period Number"
-            min_1_analyzed_df = include_period_num(min_1_analyzed_df)
-
+            # min_1_analyzed_df = include_period_num(min_1_analyzed_df)
+            min_1_analyzed_df.loc[:,"Period_Number"] = range(0,min_1_analyzed_df.shape[0])
+  
             ## Calculating Factor's Values
             min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
                                                                 num_of_std_dev, 
@@ -466,10 +484,16 @@ try:
                 continue
 
             ## Result (P & L)
-            num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+            # num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+            #     commission, slippage, net_absolute_profit_loss, \
+            #     net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
+            #         train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
+            num_of_trades, gross_absolute_profit_loss, gross_percent_profit_loss, \
                 commission, slippage, net_absolute_profit_loss, \
                 net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
                     train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
+
+            del min_1_analyzed_df
 
             final_results_logger.info(f"FINAL RESULT | {{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt}, \"Test End Date\": \
                     {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \
