@@ -18,6 +18,7 @@ import Calculate_Profit_Loss
 import Results_P_and_L
 import logging
 from tqdm import tqdm
+from multiprocessing import Process, Lock, Pool
 
 matplotlib.use('Agg')
 
@@ -335,18 +336,18 @@ try:
             params = {
                 "frequency":[5, 10, 15, 20],
                 "filter_hours":[range(8,20), range(8,22), range(7,20)],
-                "num_of_std_dev":[3, 3.5, 2, 2.5],
+                "num_of_std_dev":[2, 2.5, 3, 3.5],
                 "lookback":[10, 15, 20, 25, 30],
                 "stop_loss_buffer":[0.0005, 0.0010, 0.0015],
                 "take_profit_buffer":[0.0005, 0.0010, 0.0015]}
             # "trade_size":20000,
             tested_params = {}
 
-            for param in tqdm(ParameterGrid(params), leave=False, desc="Parameters Search"):
+            # for param in tqdm(ParameterGrid(params), leave=False, desc="Parameters Search"):
+            def params_train_processing(param):
                 trade_size = 20000 # param["trade_size"]
                 frequency = param["frequency"]
                 filter_hours = param["filter_hours"]
-
                 num_of_std_dev = param["num_of_std_dev"]
                 lookback = param["lookback"]
                 stop_loss_buffer = param["stop_loss_buffer"]
@@ -400,11 +401,20 @@ try:
                 \"Commission\":{commission}, \"Slippage\":{slippage}, \"Net absolute profit/loss\":{net_absolute_profit_loss}, \"Net % profit/loss\":{net_percent_profit_loss}}}")
 
                 ## Log parameteres used in training + net profit %
-                tested_params[str(param)] = net_percent_profit_loss
+                # tested_params[str(param)] = net_percent_profit_loss
 
+                # return tested_params
+                return str(param), net_percent_profit_loss
+
+            ## Run params_train_processing in parallel on all processors
+            with Pool(processes=os.cpu_count()) as pool:
+                tested_params_results = pool.map(params_train_processing, list(ParameterGrid(params)))
+            
+            ## Log parameteres used in training + net profit %
+            tested_params_results = dict(tested_params_results)
 
             ## Best parameters combination per training period
-            best_params_str = max(tested_params, key=tested_params.get)
+            best_params_str = max(tested_params_results, key=tested_params_results.get)
             best_params = best_params_string_to_dict(best_params_str)
 
             ## Testing run
