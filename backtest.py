@@ -345,72 +345,76 @@ try:
 
             # for param in tqdm(ParameterGrid(params), leave=False, desc="Parameters Search"):
             def params_train_processing(param):
-                trade_size = 20000 # param["trade_size"]
-                frequency = param["frequency"]
-                filter_hours = param["filter_hours"]
-                num_of_std_dev = param["num_of_std_dev"]
-                lookback = param["lookback"]
-                stop_loss_buffer = param["stop_loss_buffer"]
-                take_profit_buffer = param["take_profit_buffer"]
+                try:
+                    trade_size = 20000 # param["trade_size"]
+                    frequency = param["frequency"]
+                    filter_hours = param["filter_hours"]
+                    num_of_std_dev = param["num_of_std_dev"]
+                    lookback = param["lookback"]
+                    stop_loss_buffer = param["stop_loss_buffer"]
+                    take_profit_buffer = param["take_profit_buffer"]
 
-                ## Resampling into 1 Minute bars
-                resample_interval = f"{frequency}T"
-                min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
+                    ## Resampling into 1 Minute bars
+                    resample_interval = f"{frequency}T"
+                    min_1_analyzed_df = resample(analyzed_df, resample_interval).copy()
 
-                ## Assign factors
-                index_frequency = pd.Timedelta(minutes=frequency)
-                min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
+                    ## Assign factors
+                    index_frequency = pd.Timedelta(minutes=frequency)
+                    min_1_analyzed_df = assign_factors(min_1_analyzed_df, lookback, num_of_std_dev, index_frequency)
 
-                ## Dropping N.As
-                min_1_analyzed_df = drop_na(min_1_analyzed_df)
+                    ## Dropping N.As
+                    min_1_analyzed_df = drop_na(min_1_analyzed_df)
 
-                ## Include only certain times of the day
-                min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
+                    ## Include only certain times of the day
+                    min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
 
-                ## Including "Period Number"
-                min_1_analyzed_df = include_period_num(min_1_analyzed_df)
+                    ## Including "Period Number"
+                    min_1_analyzed_df = include_period_num(min_1_analyzed_df)
 
-                ## Calculating Factor's Values
-                min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
-                                                                    num_of_std_dev, 
-                                                                    stop_loss_buffer, 
-                                                                    take_profit_buffer)
+                    ## Calculating Factor's Values
+                    min_1_analyzed_df = Calculate_Factors.calc_factors(min_1_analyzed_df, 
+                                                                        num_of_std_dev, 
+                                                                        stop_loss_buffer, 
+                                                                        take_profit_buffer)
 
-                ## Calculating Factor's Profit and Loss
-                min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
-                                                                                                            trade_size)
+                    ## Calculating Factor's Profit and Loss
+                    min_1_analyzed_df, min_1_analyzed_df_dist_analysis = Calculate_Profit_Loss.calc_profit_loss(min_1_analyzed_df,
+                                                                                                                trade_size)
 
-                ## Only proceed if there is has been at least one trade
-                if min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].shape[0] <= 0:
-                    continue
+                    ## Only proceed if there is has been at least one trade
+                    # if min_1_analyzed_df.loc[min_1_analyzed_df["Trade_Prft_Lss"] != 0.0,"Trade_Prft_Lss"].shape[0] <= 0:
+                        # continue
 
-                ## P&L time distribution profit and loss charts
-                P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
-                    , train_end_date_dt.strftime(format="%Y%m%d"))
+                    ## P&L time distribution profit and loss charts
+                    P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_dt.strftime(format="%Y%m%d") \
+                        , train_end_date_dt.strftime(format="%Y%m%d"))
 
-                ## Result (P & L)
-                num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
-                    commission, slippage, net_absolute_profit_loss, \
-                    net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
-                        train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
-            
-                param_search_logger.info(f"{{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt},\
-                \"Test End Date\": {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \"filter_hours\":{filter_hours},\
-                \"num_of_std_dev\":{num_of_std_dev}, \"lookback\":{lookback}, \"stop_loss_buffer\":{stop_loss_buffer}, \"take_profit_buffer\":{take_profit_buffer}}} | \
-                {{\"Number of trades\":{num_of_trades}, \"Gross absolute profit/loss\":{gross_absolute_profit_loss}, \"Gross per cent profit/loss\":{gross_percent_profit_loss},\
-                \"Commission\":{commission}, \"Slippage\":{slippage}, \"Net absolute profit/loss\":{net_absolute_profit_loss}, \"Net % profit/loss\":{net_percent_profit_loss}}}")
+                    ## Result (P & L)
+                    num_of_trades, P_N_L_Stats, gross_absolute_profit_loss, gross_percent_profit_loss, \
+                        commission, slippage, net_absolute_profit_loss, \
+                        net_percent_profit_loss = Results_P_and_L.results_P_and_L(min_1_analyzed_df, trade_size, \
+                            train_start_date_dt.strftime(format="%Y%m%d"), train_end_date_dt.strftime(format="%Y%m%d"))
+                
+                    param_search_logger.info(f"{{\"Train Start Date\":{train_start_date_dt}, \"Train End Date\":{train_end_date_dt}, \"Test Start Date\":{test_start_date_dt},\
+                    \"Test End Date\": {test_end_date_dt}}} | {{\"trade_size\":{trade_size}, \"frequency\":{frequency}, \"filter_hours\":{filter_hours}, \"filter_hours\":{filter_hours},\
+                    \"num_of_std_dev\":{num_of_std_dev}, \"lookback\":{lookback}, \"stop_loss_buffer\":{stop_loss_buffer}, \"take_profit_buffer\":{take_profit_buffer}}} | \
+                    {{\"Number of trades\":{num_of_trades}, \"Gross absolute profit/loss\":{gross_absolute_profit_loss}, \"Gross per cent profit/loss\":{gross_percent_profit_loss},\
+                    \"Commission\":{commission}, \"Slippage\":{slippage}, \"Net absolute profit/loss\":{net_absolute_profit_loss}, \"Net % profit/loss\":{net_percent_profit_loss}}}")
 
-                ## Log parameteres used in training + net profit %
-                # tested_params[str(param)] = net_percent_profit_loss
+                    ## Log parameteres used in training + net profit %
+                    # tested_params[str(param)] = net_percent_profit_loss
 
-                # return tested_params
-                return str(param), net_percent_profit_loss
+                    # return tested_params
+                    return str(param), net_percent_profit_loss
+                except IndexError:
+                    pass
 
             ## Run params_train_processing in parallel on all processors
             with Pool(processes=os.cpu_count()) as pool:
                 tested_params_results = pool.map(params_train_processing, list(ParameterGrid(params)))
             
             ## Log parameteres used in training + net profit %
+            tested_params_results = [i for i in tested_params_results if i is not None]
             tested_params_results = dict(tested_params_results)
 
             ## Best parameters combination per training period
