@@ -291,17 +291,17 @@ if __name__ == "__main__":
         mondays = np.unique(df.loc[df["weekday"]==0,"weekday"].index.date)
         #n = 1 # increment by week
         for i in tqdm(mondays, leave=False, desc="Traiding Period Loop"):
-            if (i + one_week_dt + one_week_dt + dt.timedelta(days=2)) <= last_friday_dt:
+            if (i + three_weeks_dt + one_week_dt + dt.timedelta(days=2)) <= last_friday_dt:
             
                 ## Assign train_start_date_dt
                 # 19 days for training
                 train_start_date_dt = i #df.iloc[n,:].name.date()
                 ## Assign train_end_date_dt
-                train_end_date_dt = train_start_date_dt + one_week_dt #one day after actual last day as last day doesn't count
+                train_end_date_dt = train_start_date_dt + three_weeks_dt #one day after actual last day as last day doesn't count
                 
                 # continue with next i if there is less than 10 training data days
-                if (train_end_date_dt - train_start_date_dt) < (one_week_dt - dt.timedelta(days=1)) or \
-                    (train_end_date_dt - train_start_date_dt) > (one_week_dt + dt.timedelta(days=1)):
+                if (train_end_date_dt - train_start_date_dt) < (three_weeks_dt - dt.timedelta(days=4)) or \
+                    (train_end_date_dt - train_start_date_dt) > (three_weeks_dt + dt.timedelta(days=1)):
                     final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - train_end_date_dt) is less than dt.timedelta(days=10): \
                         train_start_date_dt: train_start_date_dt: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
                     final_results_logger.info(f"-----------------")
