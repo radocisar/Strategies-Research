@@ -302,7 +302,7 @@ if __name__ == "__main__":
                 # continue with next i if there is less than 10 training data days
                 if (train_end_date_dt - train_start_date_dt) < (one_week_dt - dt.timedelta(days=1)) or \
                     (train_end_date_dt - train_start_date_dt) > (one_week_dt + dt.timedelta(days=1)):
-                    final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - train_end_date_dt) is less than dt.timedelta(days=10): \
+                    final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - train_end_date_dt) is less than dt.timedelta(days4): \
                         train_start_date_dt: train_start_date_dt: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
                     final_results_logger.info(f"-----------------")
                     final_results_logger.info(f"-----------------")
