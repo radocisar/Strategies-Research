@@ -157,7 +157,8 @@ def P_and_L_time_distribution(min_1_analyzed_df_dist_analysis, train_start_date_
 
 def best_params_string_to_dict(s):
     d = {}
-    l = ['filter_hours', 'frequency', 'lookback', 'num_of_std_dev', 'stop_loss_buffer', 'take_profit_buffer']
+    # l = ['filter_hours', 'frequency', 'lookback', 'num_of_std_dev', 'stop_loss_buffer', 'take_profit_buffer']
+    l = ['frequency', 'lookback', 'num_of_std_dev', 'stop_loss_buffer', 'take_profit_buffer']
     for key, item in zip(l, s.split(":")[1:]):
         i = item[1:item.rfind(",")]
         if "range" in i:
@@ -172,13 +173,14 @@ def best_params_string_to_dict(s):
 
 # for param in tqdm(ParameterGrid(params), leave=False, desc="Parameters Search"):
 def params_train_processing(train_start_date_dt, train_end_date_dt, test_start_date_dt, \
-                                test_end_date_dt, param):
-    pbar.update(1) 
-
+                                test_end_date_dt, inst, param):
+    # print("in function before")
+    # pbar.update(1)
+    # print("in function after")
     try:
         trade_size = 20000 # param["trade_size"]
         frequency = param["frequency"]
-        filter_hours = param["filter_hours"]
+        filter_hours = range(7,20)
         num_of_std_dev = param["num_of_std_dev"]
         lookback = param["lookback"]
         stop_loss_buffer = param["stop_loss_buffer"]
@@ -200,6 +202,7 @@ def params_train_processing(train_start_date_dt, train_end_date_dt, test_start_d
         ## Dropping N.As
         # min_1_analyzed_df = drop_na(min_1_analyzed_df)
         min_1_analyzed_df.dropna(inplace=True)
+
 
         ## Include only certain times of the day
         # min_1_analyzed_df = filter_certain_hours(min_1_analyzed_df, filter_hours)
@@ -260,7 +263,15 @@ if __name__ == "__main__":
         inst = "EURGBP"
 
         ## Load data
-        df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,inst))
+        try:
+
+
+            df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,inst))
+        except FileNotFoundError:
+            try:
+                df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,inst))
+            except FileNotFoundError:
+                df = pd.read_pickle(r"L:\Raw_1_sec_Bar_Data\FX\{}\Pickle\{}.pkl".format(inst,inst))
 
         ## Adjusting start and end of time series
         # remove any dates before first Sunday (FX Specific)
@@ -280,15 +291,17 @@ if __name__ == "__main__":
         mondays = np.unique(df.loc[df["weekday"]==0,"weekday"].index.date)
         #n = 1 # increment by week
         for i in tqdm(mondays, leave=False, desc="Traiding Period Loop"):
-            if (i + three_weeks_dt + one_week_dt + dt.timedelta(days=2)) <= last_friday_dt:
+            if (i + one_week_dt + one_week_dt + dt.timedelta(days=2)) <= last_friday_dt:
+            
                 ## Assign train_start_date_dt
                 # 19 days for training
                 train_start_date_dt = i #df.iloc[n,:].name.date()
                 ## Assign train_end_date_dt
-                train_end_date_dt = train_start_date_dt + three_weeks_dt #one day after actual last day as last day doesn't count
+                train_end_date_dt = train_start_date_dt + one_week_dt #one day after actual last day as last day doesn't count
+                
                 # continue with next i if there is less than 10 training data days
-                if (train_end_date_dt - train_start_date_dt) < (three_weeks_dt - dt.timedelta(days=4)) or \
-                    (train_end_date_dt - train_start_date_dt) > (three_weeks_dt + dt.timedelta(days=1)):
+                if (train_end_date_dt - train_start_date_dt) < (one_week_dt - dt.timedelta(days=1)) or \
+                    (train_end_date_dt - train_start_date_dt) > (one_week_dt + dt.timedelta(days=1)):
                     final_results_logger.info(f"ERROR...HENCE SKIPPING CYCLE: (train_start_date_dt - train_end_date_dt) is less than dt.timedelta(days=10): \
                         train_start_date_dt: train_start_date_dt: {train_start_date_dt} - train_end_date_dt: {train_end_date_dt}")
                     final_results_logger.info(f"-----------------")
@@ -418,26 +431,29 @@ if __name__ == "__main__":
                 "take_profit_buffer" - For calculating factors
                 """
                 params = {
-                    "frequency":[15, 20], #[5, 10, 15, 20],
-                    "filter_hours":[range(8,20), range(7,20)], #[range(8,20), range(8,22), range(7,20)],
-                    "num_of_std_dev":[2, 2.5], #[2, 2.5, 3, 3.5],
-                    "lookback":[10, 15], #[10, 15, 20, 25, 30],
-                    "stop_loss_buffer":[0.0005, 0.0010], #[0.0005, 0.0010, 0.0015],
-                    "take_profit_buffer":[0.0005, 0.0010]} #[0.0005, 0.0010, 0.0015]}
+                    "frequency":[5, 10, 15],
+                    "num_of_std_dev":[2, 2.5],
+                    "lookback":[10, 20, 30],
+                    "stop_loss_buffer":[0.0005, 0.0010],
+                    "take_profit_buffer":[0.0010, 0.0015]}
                 # "trade_size":20000,
 
                 ## Setup arguments for multiprocessing of params_train_processing
+                # pbar = tqdm(total = 1440)
                 args = [(train_start_date_dt, \
                         train_end_date_dt, \
                             test_start_date_dt, \
                                 test_end_date_dt, \
-                                    param) for param in list(ParameterGrid(params))]
+                                    inst, \
+                                        param) for param in list(ParameterGrid(params))]
 
                 ## Run params_train_processing in parallel on all processors
-                with Pool(processes=os.cpu_count()-10) as pool:
-                    pbar = tqdm(total = 1440)
+                with Pool(processes=os.cpu_count()-4) as pool:
+                    # print("before pool function call")
                     tested_params_results = pool.starmap(params_train_processing, args)
                 
+
+
                 ## Log parameteres used in training + net profit %
                 tested_params_results = [i for i in tested_params_results if i is not None]
                 tested_params_results = dict(tested_params_results)
@@ -450,7 +466,7 @@ if __name__ == "__main__":
                 ### run best model against test period
                 trade_size = 20000
                 frequency = best_params["frequency"]
-                filter_hours = best_params["filter_hours"]
+                filter_hours = range(7,20)
                 num_of_std_dev = best_params["num_of_std_dev"]
                 lookback = best_params["lookback"]
                 stop_loss_buffer = best_params["stop_loss_buffer"]
